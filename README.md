@@ -20,11 +20,19 @@ scrapy==1.0.4
 
 Install
 =======
+``` 
+   apt-get install libxml2-dev libxslt-dev python-dev python-lxml
+``` 
+``` 
+   pip install scrapy
+   pip install scrapyd
+   pip install elasticsearch==2.0
+``` 
 
-apt-get install libxml2-dev libxslt-dev python-dev python-lxml
 
-pip install scrapy
+Run
 
-pip install scrapyd
-
-pip install elasticsearch==2.0
+``` 
+   cd scrapy/
+   scrapy crawl lbc
+``` 

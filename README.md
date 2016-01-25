@@ -21,7 +21,7 @@ scrapy==1.0.4
 Install
 =======
 
-apt-get install build-dep libxml2-dev libxslt-dev python-dev python-lxml
+apt-get install libxml2-dev libxslt-dev python-dev python-lxml
 
 pip install scrapy
 

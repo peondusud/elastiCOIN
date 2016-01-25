@@ -57,7 +57,7 @@ tmplt = """
         "doc_id": {
           "type": "integer",
           "include_in_all": false
-        }
+        },
         "location": {
           "type": "geo_point",
           "include_in_all": false

@@ -355,6 +355,6 @@ if __name__ == '__main__':
                         {'host': '127.0.0.1'}
                         ])
 
-    ret = es.indices.put_template(name='lbc', body=tmplt, create=True )
+    ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
 
     logger.info(ret)

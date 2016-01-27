@@ -62,7 +62,7 @@ class ElasticsearchBulkIndexPipeline(object):
                     '_index': "lbc-" + index_date,
                     '_type': 'lbc',
                     #'_id': dic.get('doc_id')
-                    '_source': dic
+                    '_source': dic.__dict__['_values']
                 }
         if 'doc_id' in dic:
             action['_id'] = dic.get('doc_id')

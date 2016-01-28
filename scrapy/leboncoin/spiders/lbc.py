@@ -22,8 +22,8 @@ class LbcSpider(scrapy.Spider):
 
     start_urls = (
         #'http://www.leboncoin.fr/annonces/offres/ile_de_france/occasions/', #all ads
-        'http://www.leboncoin.fr/voitures/offres/ile_de_france/occasions/',
-        'http://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/',
+        #'http://www.leboncoin.fr/voitures/offres/ile_de_france/occasions/',
+        #'http://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/',
         #'http://www.leboncoin.fr/annonces/offres/ile_de_france/?f=a&q=boule+facette',
         #'http://www.leboncoin.fr/_multimedia_/offres/ile_de_france/occasions/',
         'http://www.leboncoin.fr/informatique/offres/ile_de_france/occasions/',
@@ -37,7 +37,7 @@ class LbcSpider(scrapy.Spider):
         self.date_pattern = re.compile(ur'Mise en ligne le (?P<day>\d\d?) (?P<month>[a-zéû]+) . (?P<hour>\d\d?):(?P<minute>\d\d?)')
         self.doc_id_pattern = re.compile(ur"^http://www\.leboncoin\.fr/.{0,100}(?P<id>\d{9})\.htm.{0,50}$")
         self.uploader_id_pattern = re.compile(ur"^http.{0,50}(?P<id>\d{9,12})$")
-        self.uploader_id_regex = re.compile(ur"^http:\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$")
+        self.uploader_id_regex = re.compile(ur"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$")
         self.criteria_pattern = re.compile(ur'^\s{2}(?P<key>\w+) : "(?P<val>\w+)",?', re.MULTILINE)
         self.page_offset_regex = re.compile(ur"^http:\/\/www\.leboncoin\.fr\/.{0,100}\/\?o=(?P<offset>\d+).+$")
         self.nb_page = 0
@@ -71,9 +71,9 @@ class LbcSpider(scrapy.Spider):
        else:
           for doc_url in urls:
               self.nb_doc += 1
-              yield scrapy.Request(doc_url, callback=self.parse_page)
+              yield scrapy.Request("http:" + doc_url, callback=self.parse_page)
        self.nb_page += 1
-       yield scrapy.Request(next_url, callback=self.parse)
+       yield scrapy.Request("http:" + next_url, callback=self.parse)
 
 
     def proper_url(self, url):

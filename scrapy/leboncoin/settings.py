@@ -29,7 +29,7 @@ SPIDER_MIDDLEWARES = {
 
 ITEM_PIPELINES = {
     #'leboncoin.pipelines.ElasticsearchBulkUpdatePipeline': 200,
-    #'leboncoin.pipelines.ElasticsearchBulkIndexPipeline': 200,
+    'leboncoin.pipelines.ElasticsearchBulkIndexPipeline': 200,
     'leboncoin.pipelines.JsonLinesWithEncodingPipeline': 300,
 }
 

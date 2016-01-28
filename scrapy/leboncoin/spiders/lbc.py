@@ -22,11 +22,11 @@ class LbcSpider(scrapy.Spider):
 
     start_urls = (
         #'http://www.leboncoin.fr/annonces/offres/ile_de_france/occasions/', #all ads
-        #'http://www.leboncoin.fr/voitures/offres/ile_de_france/occasions/',
-        #'http://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/',
-        'http://www.leboncoin.fr/annonces/offres/ile_de_france/?f=a&q=boule+facette',
+        'http://www.leboncoin.fr/voitures/offres/ile_de_france/occasions/',
+        'http://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/',
+        #'http://www.leboncoin.fr/annonces/offres/ile_de_france/?f=a&q=boule+facette',
         #'http://www.leboncoin.fr/_multimedia_/offres/ile_de_france/occasions/',
-        #'http://www.leboncoin.fr/informatique/offres/ile_de_france/occasions/',
+        'http://www.leboncoin.fr/informatique/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/image_son/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/ameublement/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/electromenager/offres/ile_de_france/occasions/',

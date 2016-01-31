@@ -25,7 +25,9 @@ class LeboncoinItem(Item):
     check_date = Field()
     check_epoch = Field()
 
-    urgent = Field()
+    urg = Field()
+    premium = Field()
+    
 
     region = Field()
     addr_locality = Field()

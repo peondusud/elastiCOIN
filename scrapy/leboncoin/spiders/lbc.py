@@ -25,9 +25,10 @@ class LbcSpider(scrapy.Spider):
         #'http://www.leboncoin.fr/annonces/offres/ile_de_france/occasions/', #all ads
         #'http://www.leboncoin.fr/voitures/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/',
-        #'http://www.leboncoin.fr/annonces/offres/ile_de_france/?f=a&q=boule+facette',
+        #'http://www.leboncoin.fr/annonces/offres/ile_de_france/?f=a&q=boule+facette', #cyril Tribute
         #'http://www.leboncoin.fr/_multimedia_/offres/ile_de_france/occasions/',
-        'http://www.leboncoin.fr/informatique/offres/ile_de_france/occasions/',
+        #'http://www.leboncoin.fr/informatique/offres/ile_de_france/occasions/',
+        'http://www.leboncoin.fr/annonces/offres/ile_de_france/val_d_oise/?f=a&th=1&q=DL360+G5',
         #'http://www.leboncoin.fr/image_son/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/ameublement/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/electromenager/offres/ile_de_france/occasions/',
@@ -55,11 +56,20 @@ class LbcSpider(scrapy.Spider):
        page_urls = content.xpath('nav/ul[@id="paging"]//li[@class="page"]/a/@href').extract()
        last_page = content.xpath('nav/ul[@id="paging"]//li/a/@href').extract()
 
-       next_url = page_urls[-1]
+       next_url = None
+       try:
+           next_url = page_urls[-1]
+       except IndexError:
+           next_url = "" 
+
+       try:
+           last_page = last_page[-1]
+       except IndexError:
+           last_page = "" 
 
        nb_page = self.offset_url_page_regex(next_url) - 1
 
-       last_page = self.offset_url_page_regex(last_page[-1])
+       last_page = self.offset_url_page_regex(last_page)
        self.logger.debug("nb_page, last_page", nb_page, last_page )
 
        if nb_page == last_page:
@@ -199,7 +209,12 @@ class LbcSpider(scrapy.Spider):
        content = response.xpath('/html/body/div/div[2]/div/div[3]')
 
        lbc_page['title'] = self.takeFirst(content.xpath('div/div[1]/div[1]/h1/text()').extract())
-
+       
+       premium = self.takeFirst(content.xpath('div/div[1]/div[1]/h1/span[@class="boosterLogo"]').extract())
+       if premium:
+           lbc_page['premium'] = 1
+       else:
+           lbc_page['premium'] = 0
 
        content2 = content.xpath('div[@class="content-color"]/div[@class="lbcContainer"]/div[@class="colRight"]')
 
@@ -227,9 +242,9 @@ class LbcSpider(scrapy.Spider):
        #urgent = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="lbcParams withborder"]/div[@class="floatLeft"]/table[1]/tbody/tr[@class="price"]/td/span[@class="urgent"]/text()').extract()
        urgent = content2.xpath('//span[@class="urgent"]/text()').extract()
        if urgent:
-           lbc_page['urgent'] = 1
+           lbc_page['urg'] = 1
        else:
-           lbc_page['urgent'] = 0
+           lbc_page['urg'] = 0
 
        place = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="lbcParams withborder"]/div[@class="floatLeft"]/table[@itemtype="http://schema.org/Place"]/tbody[@itemtype="http://schema.org/PostalAddress"]')
 

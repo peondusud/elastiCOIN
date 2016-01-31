@@ -62,11 +62,11 @@ tmplt = """
           "type": "geo_point",
           "include_in_all": false
         },
-        "urgent": {
+        "urg": {
           "type": "short",
           "include_in_all": false
         },
-        "criterias": {
+        "c": {
           "properties": {
             "region": {
               "type": "short",
@@ -318,9 +318,17 @@ tmplt = """
           "format": "yyyy.MM.dd HH:mm:ss",
           "include_in_all": false
         },
+        "upload_epoch": {
+          "type": "integer",
+          "include_in_all": false
+        },
         "check_date": {
           "type": "date",
           "format": "yyyy.MM.dd HH:mm:ss",
+          "include_in_all": false
+        },
+        "check_epoch": {
+          "type": "integer",
           "include_in_all": false
         },
         "addr_locality": {
@@ -345,16 +353,21 @@ tmplt = """
 
 
 if __name__ == '__main__':
-    fmt = '%(asctime)-15s [%(levelname)s] [%(module)s>%(funcName)s] %(message)s'
+    fmt = '%(asctime)-15s [%(levelname)s] [%(module)s] %(message)s'
     logging.basicConfig(format=fmt)
     logger = logging.getLogger(__name__)
     logger.setLevel( 'INFO' )
 
-    logger.info("Start injection")
-    es = Elasticsearch([
-                        {'host': '127.0.0.1'}
-                        ])
+    tracer = logging.getLogger('elasticsearch.trace')
+    tracer.setLevel('INFO')
+    #tracer.addHandler(logging.StreamHandler())
+    tracer.addHandler(logging.NullHandler())
+    tracer.propagate = False
 
+
+    es = Elasticsearch([{'host': '127.0.0.1'}])
+
+    logger.info("Try to put lbc template")
     ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
 
     logger.info(ret)

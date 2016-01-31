@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-BOT_NAME = 'lbc_bot'
+BOT_NAME = 'lbc'
 
 SPIDER_MODULES = ['leboncoin.spiders']
 NEWSPIDER_MODULE = 'leboncoin.spiders'
@@ -36,7 +36,7 @@ ITEM_PIPELINES = {
 ES_HOST = "127.0.0.1"
 ES_PORT = 9200
 ES_URL_PREFIX = ''
-#ES_BULK_SIZE = 200
+ES_BULK_SIZE = 400
 
 #Maximum number of concurrent items (per response) to process in parallel in the Item Processor
 CONCURRENT_ITEMS = 100
@@ -50,7 +50,8 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:43.0) Gecko/20100101 Firefo
 #FEED_URI = 'dump_lbc.json'
 #FEED_FORMAT = 'jsonlines'
 
-FEED_URI_PREFIX = 'dump_lbc'
+FEED_JL_URI_PREFIX = 'dump'
+FEED_JL_ENCODING = 'utf-8'
 
 #The maximum limit for Twisted Reactor thread pool size. This is common multi-purpose thread pool used by various Scrapy components.
 REACTOR_THREADPOOL_MAXSIZE = 10

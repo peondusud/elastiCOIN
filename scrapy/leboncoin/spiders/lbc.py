@@ -17,6 +17,7 @@ class LbcSpider(scrapy.Spider):
     allowed_domains = ["leboncoin.fr"]
     DATE_FORMAT = "%Y.%m.%d"
     TIME_FORMAT = "%H:%M:%S"
+    EPOCH_FORMAT = "%s"
     DATETIME_FORMAT = u" ".join((DATE_FORMAT, TIME_FORMAT))
 
 
@@ -165,8 +166,7 @@ class LbcSpider(scrapy.Spider):
                 #set previous year
                 year -= 1
             d = datetime(year, month, day, hour, minute)
-            date_str = d.strftime(self.DATETIME_FORMAT)
-            return date_str
+            return d
         return ''
 
     def proper_thumbs_url(self, urls):
@@ -178,7 +178,10 @@ class LbcSpider(scrapy.Spider):
         return thumb_urls
 
     def jsVar_2_pyDic(self, criterias):
-        return dict(re.findall(self.criteria_pattern,criterias))
+        d =  dict(re.findall(self.criteria_pattern,criterias))
+        #environnement key always eq "prod" so useless
+        d.pop("environnement", None) 
+        return d 
 
     def proper_description(self, desc):
         str = u"\n".join(desc)
@@ -214,8 +217,12 @@ class LbcSpider(scrapy.Spider):
        lbc_page['user_id'] = self.get_uploader_id_regex(user_url)
 
        text = u''.join(upload.xpath('text()').extract())
-       lbc_page['upload_date'] = self.get_date(text)
-       lbc_page['check_date'] = datetime.now().strftime(self.DATETIME_FORMAT)
+       upload_date = self.get_date(text)
+       lbc_page['upload_date'] = upload_date.strftime(self.DATETIME_FORMAT) 
+       lbc_page['upload_epoch'] = upload_date.strftime(self.EPOCH_FORMAT) 
+       check_date = datetime.now()
+       lbc_page['check_date'] = check_date.strftime(self.DATETIME_FORMAT)
+       lbc_page['check_epoch'] = check_date.strftime(self.EPOCH_FORMAT)
 
        #urgent = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="lbcParams withborder"]/div[@class="floatLeft"]/table[1]/tbody/tr[@class="price"]/td/span[@class="urgent"]/text()').extract()
        urgent = content2.xpath('//span[@class="urgent"]/text()').extract()
@@ -235,7 +242,7 @@ class LbcSpider(scrapy.Spider):
            lbc_page['location'] = [float(longitude), float(latitude)]
 
        criterias = self.takeFirst(response.xpath('/html/body/script[1]/text()').extract())
-       lbc_page['criterias'] = self.jsVar_2_pyDic(criterias)
+       lbc_page['c'] = self.jsVar_2_pyDic(criterias)
 
        description  = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="AdviewContent"]/div[@class="content"]/text()').extract()
        lbc_page['desc'] = self.proper_description(description)

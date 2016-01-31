@@ -15,14 +15,21 @@ import codecs
 import logging
 from collections import OrderedDict
 from datetime import datetime
-
+import pprint
 
 class JsonLinesWithEncodingPipeline(object):
     def __init__(self):
-        #settings = get_project_settings()
-        path = settings.get('FEED_URI_PREFIX', "dump" )  + "_utf8.json"
         self.logger = logging.getLogger(__name__)
-        self.file = codecs.open(path, 'w', encoding='utf-8')
+        #settings = get_project_settings()
+        #pprint.pprint((settings.__dict__))
+        d =  datetime.now().strftime("%y.%m.%d.%H%M")        
+        prefix  = settings.get('FEED_JL_URI_PREFIX', "dump" )
+        encodin =  settings.get('FEED_JL_ENCODING', 'utf-8')
+        suffix = encodin + ".json"
+        bot_name  = settings.get('BOT_NAME', "" )
+
+        path = "{}_{}_{}_{}".format(prefix, bot_name, d, suffix)
+        self.file = codecs.open(path, 'w', encoding=encodin)
 
 
     def process_item(self, item, spider):
@@ -47,6 +54,8 @@ class ElasticsearchBulkIndexPipeline(object):
                     'port': settings.get('ES_PORT', 9200),
                     'url_prefix': settings.get('ES_URL_PREFIX', '') }
         self.action_buffer = list()
+        #first try to set  "limit -Sn 30000" and Hn  if bulksize is bigger
+        #second if the first step fails threadpool.bulk.queue_size: 500 in elasticsearch.yml
         self.es_bulk_size = settings.get('ES_BULK_SIZE', 50)
         self.es = Elasticsearch([es_params])
         """

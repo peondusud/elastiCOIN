@@ -7,30 +7,26 @@ from scrapy.loader.processors import TakeFirst, MapCompose, Join
 class LeboncoinItem(Item):
     doc_id = Field()
     doc_url = Field()
-    doc_category = Field()
+    
     title = Field()
+    desc = Field()
+    c = Field()
+    
     img_urls = Field()
     thumb_urls = Field()
+    
     user_url = Field()
     user_id = Field()
     user_name = Field()
-    user_pro = Field()
-    user_pro_siren = Field()
 
     upload_date = Field()
+    upload_epoch = Field()
+    
     check_date = Field()
+    check_epoch = Field()
 
-    price_currency = Field()
-    price = Field()
     urgent = Field()
 
     region = Field()
     addr_locality = Field()
-    postal_code = Field()
-    latitude = Field()
-    longitude = Field()
     location = Field()
-
-    criterias = Field()
-
-    desc = Field()

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#1 -*- coding: utf-8 -*-
 
 import scrapy
 from scrapy.loader import ItemLoader
@@ -25,10 +25,8 @@ class LbcSpider(scrapy.Spider):
         #'http://www.leboncoin.fr/annonces/offres/ile_de_france/occasions/', #all ads
         #'http://www.leboncoin.fr/voitures/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/',
-        #'http://www.leboncoin.fr/annonces/offres/ile_de_france/?f=a&q=boule+facette', #cyril Tribute
-        #'http://www.leboncoin.fr/_multimedia_/offres/ile_de_france/occasions/',
+        'http://www.leboncoin.fr/_multimedia_/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/informatique/offres/ile_de_france/occasions/',
-        'http://www.leboncoin.fr/annonces/offres/ile_de_france/val_d_oise/?f=a&th=1&q=DL360+G5',
         #'http://www.leboncoin.fr/image_son/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/ameublement/offres/ile_de_france/occasions/',
         #'http://www.leboncoin.fr/electromenager/offres/ile_de_france/occasions/',
@@ -41,6 +39,9 @@ class LbcSpider(scrapy.Spider):
         self.uploader_id_pattern = re.compile(ur"^http.{0,50}(?P<id>\d{9,12})$")
         self.uploader_id_regex = re.compile(ur"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$")
         self.criteria_pattern = re.compile(ur'^\s{2}(?P<key>\w+) : "(?P<val>\w+)",?', re.MULTILINE)
+        self.places_pattern = re.compile(ur'var.*?=\s*([^\$]+?);', re.MULTILINE)
+        self.images_thumbs_pattern = re.compile(ur'images_thumbs\[\d\].*?=\s*(.*?);')
+        self.images_pattern = re.compile(ur'images\[\d\].*?=\s*(.*?);', re.MULTILINE)
         self.page_offset_regex = re.compile(ur"^http:\/\/www\.leboncoin\.fr\/.{0,100}\/\?o=(?P<offset>\d+).+$")
         self.nb_page = 0
         self.nb_doc = 0
@@ -50,41 +51,26 @@ class LbcSpider(scrapy.Spider):
 
     def parse(self, response):
        self.logger.debug("response.url", response.url)
-       content = response.xpath('/html/body/div[@id="page_align"]/div[@id="page_width"]/div[@id="ContainerMain"]')
-       urls = content.xpath('div[@class="content-border list"]/div[@class="content-color"]/div[@class="list-lbc"]/a/@href').extract()
-
-       page_urls = content.xpath('nav/ul[@id="paging"]//li[@class="page"]/a/@href').extract()
-       last_page = content.xpath('nav/ul[@id="paging"]//li/a/@href').extract()
-
-       next_url = None
+       base = response.xpath('/html/body/section[@id="container"]/main/section/section[@id="listingAds"]/section[@class="list mainList tabs"]')
+       urls = base.xpath('ul//li/a/@href').extract()
+       next_page_url = None
        try:
-           next_url = page_urls[-1]
+           next_page_url = base.xpath('footer/div/div/a[@id="next"]/@href').extract()[0]
        except IndexError:
-           next_url = "" 
+           pass
 
-       try:
-           last_page = last_page[-1]
-       except IndexError:
-           last_page = "" 
-
-       nb_page = self.offset_url_page_regex(next_url) - 1
-
-       last_page = self.offset_url_page_regex(last_page)
-       self.logger.debug("nb_page, last_page", nb_page, last_page )
-
-       if nb_page == last_page:
+       if next_page_url is None:
            while True:
                if self.nb_doc == 0:
                    raise CloseSpider('End - Done') #must close spider
                self.logger.debug("Wait to close spider nb doc left", self.nb_doc)
-               self.logger.debug("wait to close spider offset page", self.nb_page)
                time.sleep(1)
        else:
           for doc_url in urls:
               self.nb_doc += 1
               yield scrapy.Request("http:" + doc_url, callback=self.parse_page)
        self.nb_page += 1
-       yield scrapy.Request("http:" + next_url, callback=self.parse)
+       yield scrapy.Request("http:" + next_page_url, callback=self.parse)
 
 
     def proper_url(self, url):
@@ -179,19 +165,33 @@ class LbcSpider(scrapy.Spider):
             return d
         return ''
 
-    def proper_thumbs_url(self, urls):
-        thumb_urls = list()
-        for elem in urls:
-            m = re.search(self.thumb_pattern, elem)
-            if m is not None:
-                thumb_urls.append(m.group('url'))
-        return thumb_urls
+
+    def find_imgs_urls(self, string):
+        imgs_urls = re.findall(self.images_pattern, string)
+        return imgs_urls
+
+    def find_thumbs_urls(self, string):
+        thumbs_urls = re.findall(self.images_thumbs_pattern, string)
+        return thumbs_urls
+
+    def get_geopoint(self, longitude, latitude):
+        lon = longitude[1:-1]
+        lat = latitude[1:-1]
+        try:
+            location = [float(lon), float(lat)]
+        except ValueError:
+            return None
+        return location
+
+    def jsVars_2_py(self, place):
+        l =  re.findall(self.places_pattern, place)
+        return l
 
     def jsVar_2_pyDic(self, criterias):
         d =  dict(re.findall(self.criteria_pattern,criterias))
         #environnement key always eq "prod" so useless
-        d.pop("environnement", None) 
-        return d 
+        d.pop("environnement", None)
+        return d
 
     def proper_description(self, desc):
         str = u"\n".join(desc)
@@ -204,63 +204,55 @@ class LbcSpider(scrapy.Spider):
        lbc_page = LeboncoinItem()
        self.logger.debug("page nb doc", self.nb_doc, response.url)
        lbc_page['doc_url'] = self.proper_url(response.url)
-       lbc_page['doc_id'] = self.get_id_regex(lbc_page['doc_url'])
 
-       content = response.xpath('/html/body/div/div[2]/div/div[3]')
+       base = response.xpath('/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]')
+       lbc_page['title'] = self.takeFirst(base.xpath('section/header/h1/text()').extract()).strip()
+       #lbc_page['title'] = self.takeFirst(base.xpath('section[@class="adview_main"]/section[@class="carousel"]/div/@data-alt').extract())
 
-       lbc_page['title'] = self.takeFirst(content.xpath('div/div[1]/div[1]/h1/text()').extract())
+       images = self.takeFirst(base.xpath('section/section/script/text()').extract())
+       """
+        images_thumbs[0] = "//img1.leboncoin.fr/thumbs/1ed/1ed739cec30cdd54a4459308aaf3c28acd7bdf76.jpg";
+        images[0] = "//img1.leboncoin.fr/xxl/1ed/1ed739cec30cdd54a4459308aaf3c28acd7bdf76.jpg";
+       """
+       if images is not None:
+           lbc_page['img_urls'] = self.find_imgs_urls(images)
+           lbc_page['thumb_urls'] = self.find_thumbs_urls(images)
+
+       #lbc_page['addr_locality'] =
+       place_list = self.jsVars_2_py(self.takeFirst(base.xpath('aside/div/script/text()').extract()))
        
-       premium = self.takeFirst(content.xpath('div/div[1]/div[1]/h1/span[@class="boosterLogo"]').extract())
-       if premium:
-           lbc_page['premium'] = 1
-       else:
-           lbc_page['premium'] = 0
+       """
+         var apiKey = "54bb0281238b45a03f0ee695f73e704f";
+         var lat = "48.85766 ";
+         var lng = "2.38004 ";
+       """
+       apiKey = place_list[0]
+       lat = place_list[1]
+       lng =  place_list[2]
+       lbc_page['location'] = self.get_geopoint(lng, lat)
 
-       content2 = content.xpath('div[@class="content-color"]/div[@class="lbcContainer"]/div[@class="colRight"]')
+       base2 = base.xpath('section/section/section[@class="properties lineNegative"]')
 
-       imgs = content2.xpath('div/div[@class="lbcImages"]')
-       thumbs = imgs.xpath('div[@class="thumbs_carousel_window"]/div[@id="thumbs_carousel"]//span[@class="thumbs"]/@style').extract()
-       lbc_page['img_urls'] = imgs.xpath('meta/@content').extract()
-       lbc_page['thumb_urls'] = self.proper_thumbs_url(thumbs)
-
-       upload = content2.xpath('div[@class="upload_by"]')
-
-       lbc_page['user_name'] = self.takeFirst(upload.xpath('a/text()').extract())
-
-       user_url = self.takeFirst( upload.xpath('a/@href').extract() )
-       #lbc_page['user_url'] = self.proper_url(user_url)
-       lbc_page['user_id'] = self.get_uploader_id_regex(user_url)
-
-       text = u''.join(upload.xpath('text()').extract())
-       upload_date = self.get_date(text)
-       lbc_page['upload_date'] = upload_date.strftime(self.DATETIME_FORMAT) 
-       lbc_page['upload_epoch'] = upload_date.strftime(self.EPOCH_FORMAT) 
+       date_text = base2.xpath('p/text()').extract()
+       upload_date = self.get_date(date_text)
+       lbc_page['upload_date'] = upload_date.strftime(self.DATETIME_FORMAT)
+       lbc_page['upload_epoch'] = upload_date.strftime(self.EPOCH_FORMAT)
        check_date = datetime.now()
        lbc_page['check_date'] = check_date.strftime(self.DATETIME_FORMAT)
        lbc_page['check_epoch'] = check_date.strftime(self.EPOCH_FORMAT)
 
-       #urgent = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="lbcParams withborder"]/div[@class="floatLeft"]/table[1]/tbody/tr[@class="price"]/td/span[@class="urgent"]/text()').extract()
-       urgent = content2.xpath('//span[@class="urgent"]/text()').extract()
-       if urgent:
-           lbc_page['urg'] = 1
-       else:
-           lbc_page['urg'] = 0
-
-       place = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="lbcParams withborder"]/div[@class="floatLeft"]/table[@itemtype="http://schema.org/Place"]/tbody[@itemtype="http://schema.org/PostalAddress"]')
-
-       lbc_page['addr_locality'] = self.takeFirst(place.xpath('tr/td[@itemprop="addressLocality"]/text()').extract())
-
-       geo_coords = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="lbcParams withborder"]/div[@class="floatLeft"]/table[@itemtype="http://schema.org/Place"]')
-       latitude = self.takeFirst(geo_coords.xpath('.//meta[@itemprop="latitude"]/@content').extract())
-       longitude = self.takeFirst(geo_coords.xpath('.//meta[@itemprop="longitude"]/@content').extract())
-       if longitude and latitude:
-           lbc_page['location'] = [float(longitude), float(latitude)]
+       lbc_page['user_name'] = self.takeFirst(base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract())
 
        criterias = self.takeFirst(response.xpath('/html/body/script[1]/text()').extract())
-       lbc_page['c'] = self.jsVar_2_pyDic(criterias)
+       #lbc_page['c'] = self.jsVar_2_pyDic(criterias)
+       lbc_page['c'] = criterias
+       #print criterias
 
-       description  = content2.xpath('div[@class="lbcParamsContainer floatLeft"]/div[@class="AdviewContent"]/div[@class="content"]/text()').extract()
+       description  = base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
        lbc_page['desc'] = self.proper_description(description)
 
+       #TODO get phone
+
        self.nb_doc -= 1 #decrement cnt usefull for stop spider
+       #print lbc_page
        return lbc_page

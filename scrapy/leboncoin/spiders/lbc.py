@@ -38,10 +38,10 @@ class LbcSpider(scrapy.Spider):
         self.doc_id_pattern = re.compile(ur"^http://www\.leboncoin\.fr/.{0,100}(?P<id>\d{9})\.htm.{0,50}$")
         self.uploader_id_pattern = re.compile(ur"^http.{0,50}(?P<id>\d{9,12})$")
         self.uploader_id_regex = re.compile(ur"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$")
-        self.criteria_pattern = re.compile(ur'^\s{2}(?P<key>\w+) : "(?P<val>\w+)",?', re.MULTILINE)
-        self.places_pattern = re.compile(ur'var.*?=\s*([^\$]+?);', re.MULTILINE)
-        self.images_thumbs_pattern = re.compile(ur'images_thumbs\[\d\].*?=\s*(.*?);')
-        self.images_pattern = re.compile(ur'images\[\d\].*?=\s*(.*?);', re.MULTILINE)
+        self.criteria_pattern = re.compile(ur'^\s*(\w+) : \"([\w\/]+)\",?', re.MULTILINE) 
+        self.places_pattern = re.compile(ur'var.*?=\s"([^\$]+?)";', re.MULTILINE)
+        self.images_thumbs_pattern = re.compile(ur'images_thumbs\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE) 
+        self.images_pattern = re.compile(ur'images\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE) 
         self.page_offset_regex = re.compile(ur"^http:\/\/www\.leboncoin\.fr\/.{0,100}\/\?o=(?P<offset>\d+).+$")
         self.nb_page = 0
         self.nb_doc = 0
@@ -175,22 +175,20 @@ class LbcSpider(scrapy.Spider):
         return thumbs_urls
 
     def get_geopoint(self, longitude, latitude):
-        lon = longitude[1:-1]
-        lat = latitude[1:-1]
-        try:
-            location = [float(lon), float(lat)]
-        except ValueError:
-            return None
+        lon = longitude.strip()
+        lat = latitude.strip()
+        location = [float(lon), float(lat)]
         return location
 
     def jsVars_2_py(self, place):
-        l =  re.findall(self.places_pattern, place)
+        l = re.findall(self.places_pattern, place)
         return l
 
     def jsVar_2_pyDic(self, criterias):
-        d =  dict(re.findall(self.criteria_pattern,criterias))
+        d = dict(re.findall(self.criteria_pattern, criterias))
         #environnement key always eq "prod" so useless
         d.pop("environnement", None)
+        d.pop("previouspage", None)
         return d
 
     def proper_description(self, desc):
@@ -206,32 +204,31 @@ class LbcSpider(scrapy.Spider):
        lbc_page['doc_url'] = self.proper_url(response.url)
 
        base = response.xpath('/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]')
+       base2 = base.xpath('section/section/section[@class="properties lineNegative"]')
        lbc_page['title'] = self.takeFirst(base.xpath('section/header/h1/text()').extract()).strip()
-       #lbc_page['title'] = self.takeFirst(base.xpath('section[@class="adview_main"]/section[@class="carousel"]/div/@data-alt').extract())
 
-       images = self.takeFirst(base.xpath('section/section/script/text()').extract())
-       """
-        images_thumbs[0] = "//img1.leboncoin.fr/thumbs/1ed/1ed739cec30cdd54a4459308aaf3c28acd7bdf76.jpg";
-        images[0] = "//img1.leboncoin.fr/xxl/1ed/1ed739cec30cdd54a4459308aaf3c28acd7bdf76.jpg";
-       """
-       if images is not None:
-           lbc_page['img_urls'] = self.find_imgs_urls(images)
-           lbc_page['thumb_urls'] = self.find_thumbs_urls(images)
+       criterias = self.takeFirst(response.xpath('/html/body/script[1]/text()').extract())
+       lbc_page['c'] = self.jsVar_2_pyDic(criterias)
 
-       #lbc_page['addr_locality'] =
-       place_list = self.jsVars_2_py(self.takeFirst(base.xpath('aside/div/script/text()').extract()))
+       if int(lbc_page['c']['nbphoto']) > 1:
+           images = self.takeFirst(base.xpath('section/section/script/text()').extract())
+           if images is not None:
+               lbc_page['img_urls'] = self.find_imgs_urls(images)
+               lbc_page['thumb_urls'] = self.find_thumbs_urls(images)
+       elif int(lbc_page['c']['nbphoto']) == 1:
+           lbc_page['img_urls'] = self.takeFirst(base.xpath('section/section[@class="adview_main"]/meta/@content').extract())[2:]
+
+       city = self.takeFirst(base2.xpath('div[@itemtype="http://schema.org/Place"]/h2/span[@itemtype="http://schema.org/PostalAddress"]/text()').extract()) 
+       proper_city = " ".join(city.strip().split(' ')[:-1]) 
+       lbc_page['addr_locality'] = proper_city
        
-       """
-         var apiKey = "54bb0281238b45a03f0ee695f73e704f";
-         var lat = "48.85766 ";
-         var lng = "2.38004 ";
-       """
+       place_list = self.jsVars_2_py(self.takeFirst(base.xpath('aside/div/script/text()').extract()))
        apiKey = place_list[0]
        lat = place_list[1]
        lng =  place_list[2]
-       lbc_page['location'] = self.get_geopoint(lng, lat)
-
-       base2 = base.xpath('section/section/section[@class="properties lineNegative"]')
+       location = self.get_geopoint(lng, lat)
+       if location:
+           lbc_page['location'] = location
 
        date_text = base2.xpath('p/text()').extract()
        upload_date = self.get_date(date_text)
@@ -243,10 +240,6 @@ class LbcSpider(scrapy.Spider):
 
        lbc_page['user_name'] = self.takeFirst(base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract())
 
-       criterias = self.takeFirst(response.xpath('/html/body/script[1]/text()').extract())
-       #lbc_page['c'] = self.jsVar_2_pyDic(criterias)
-       lbc_page['c'] = criterias
-       #print criterias
 
        description  = base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
        lbc_page['desc'] = self.proper_description(description)
@@ -254,5 +247,4 @@ class LbcSpider(scrapy.Spider):
        #TODO get phone
 
        self.nb_doc -= 1 #decrement cnt usefull for stop spider
-       #print lbc_page
        return lbc_page

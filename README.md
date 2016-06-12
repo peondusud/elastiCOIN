@@ -54,7 +54,11 @@ Deploy leboncoin scrapy project
 ```
 
 Launch lbc scrapper
-List available spiders (scrapy list)
 ```
    curl http://localhost:6800/schedule.json -d project=leboncoin -d spider=lbc 
+```
+
+Hint: List available spiders
+```
+scrapy list
 ```

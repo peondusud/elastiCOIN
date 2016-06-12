@@ -3,23 +3,19 @@
 
 Requirements
 ============
-python 2.7
+* python 2.7
 
-elasticsearch 2.3.3
+* elasticsearch 2.3.3
+  https://www.elastic.co/downloads/elasticsearch
 
-https://www.elastic.co/downloads/elasticsearch
+* kibana 4.5.1
+  https://www.elastic.co/downloads/kibana
 
-kibana 4.5.1
+* elasticsearch-py==2.3
+  https://elasticsearch-py.readthedocs.org/en/master/index.html
 
-https://www.elastic.co/downloads/kibana
-
-elasticsearch-py==2.3
-
-https://elasticsearch-py.readthedocs.org/en/master/index.html
-
-scrapy==1.1.0
-
-http://doc.scrapy.org/en/latest/intro/install.html
+* scrapy==1.1.0
+  http://doc.scrapy.org/en/latest/intro/install.html
 
 
 

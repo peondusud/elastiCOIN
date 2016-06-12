@@ -4,6 +4,7 @@
 ## Requirements
 * python 2.7
   https://docs.python.org/2/
+
 * elasticsearch 2.3.3
   https://www.elastic.co/guide/en/elasticsearch/reference/2.3/index.html
 

@@ -50,7 +50,6 @@ Run
 Run with scrapyd
 ================
 Launch scrapyd
-
 ```
 nohup scrapyd
 ```

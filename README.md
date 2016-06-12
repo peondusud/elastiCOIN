@@ -18,8 +18,7 @@
 
 
 
-Install
-=======
+## Install
 ```
    curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
    apt-get update 
@@ -33,15 +32,13 @@ Install
 ``` 
 
 
-Run
-===
+## Run
 ``` 
    cd scrapy/
    scrapy crawl lbc
 ``` 
 
-Run with scrapyd
-================
+## Run with scrapyd
 Launch scrapyd
 ```
 nohup scrapyd

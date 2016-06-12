@@ -3,6 +3,7 @@
 
 ## Requirements
 * python 2.7
+  https://docs.python.org/2/
 
 * elasticsearch 2.3.3
   https://www.elastic.co/guide/en/elasticsearch/reference/2.3/index.html
@@ -10,13 +11,17 @@
 * kibana 4.5.1
   https://www.elastic.co/guide/en/kibana/4.5/index.html
 
-* elasticsearch-py==2.3
-  https://elasticsearch-py.readthedocs.org/en/master/index.html
+* elasticsearch-py==2.3.0
+  http://elasticsearch-py.readthedocs.io/en/2.3.0/
 
 * scrapy==1.1.0
-  http://doc.scrapy.org/en/latest/intro/install.html
+  http://doc.scrapy.org/en/1.1/intro/install.html
 
+* scrapyd==1.1.0
+  http://scrapyd.readthedocs.io/en/1.1/
 
+* scrapoxy
+  http://docs.scrapoxy.io/en/master/
 
 ## Install
 ```

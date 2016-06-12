@@ -6,9 +6,11 @@ Requirements
 * python 2.7
 
 * elasticsearch 2.3.3
-  (https://www.elastic.co/guide/en/elasticsearch/reference/2.3/index.html)
+ 
+  https://www.elastic.co/guide/en/elasticsearch/reference/2.3/index.html
 
 * kibana 4.5.1
+
   https://www.elastic.co/guide/en/kibana/4.5/index.html
 
 * elasticsearch-py==2.3

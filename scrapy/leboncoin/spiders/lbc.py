@@ -51,8 +51,8 @@ class LbcSpider(scrapy.Spider):
 
     def parse(self, response):
        self.logger.debug("response.url", response.url)
-       base = response.xpath('/html/body/section[@id="container"]/main/section/section[@id="listingAds"]/section[@class="list mainList tabs"]')
-       urls = base.xpath('ul//li/a/@href').extract()
+       base = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]')
+       urls = base.xpath('section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href').extract()
        next_page_url = None
        try:
            next_page_url = base.xpath('footer/div/div/a[@id="next"]/@href').extract()[0]
@@ -177,7 +177,9 @@ class LbcSpider(scrapy.Spider):
     def get_geopoint(self, longitude, latitude):
         lon = longitude.strip()
         lat = latitude.strip()
-        location = [float(lon), float(lat)]
+        location = None
+        if lon != "":
+            location = [float(lon), float(lat)]
         return location
 
     def jsVars_2_py(self, place):

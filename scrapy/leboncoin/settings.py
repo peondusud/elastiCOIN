@@ -8,8 +8,7 @@ NEWSPIDER_MODULE = 'leboncoin.spiders'
 EXTENSIONS = {
     'scrapy.extensions.corestats.CoreStats': 500,
     'scrapy.extensions.logstats.LogStats': 500,
-    'scrapy.telnet.TelnetConsole': 500,
-    #'scrapy.extensions.telnet.TelnetConsole': 500,
+    'scrapy.extensions.telnet.TelnetConsole': 500,
     'scrapy.extensions.closespider.CloseSpider': 500
 }
 

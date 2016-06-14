@@ -53,7 +53,7 @@ First cd into scrapy project's root
 ```
    cd scrapy/
 ```
-Deploy leboncoin scrapy project
+Deploy lbc scrapy project
 ```
    crapyd-deploy  leboncoin  -p leboncoin
 ```

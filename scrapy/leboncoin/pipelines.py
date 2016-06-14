@@ -71,16 +71,15 @@ class ElasticsearchBulkIndexPipeline(object):
                     '_index': "lbc-" + index_date,
                     '_type': 'lbc',
                     #'_id': dic.get('doc_id')
+                    '_id': dic['c']['listid'],
                     '_source': dic.__dict__['_values']
                 }
-        if 'doc_id' in dic:
-            action['_id'] = dic.get('doc_id')
         self.action_buffer.append(action)
 
     def process_item(self, item, spider):
         if len(self.action_buffer) == self.es_bulk_size:
             success, _ = helpers.bulk( self.es, actions=self.action_buffer, stats_only=True, raise_on_error=True, chunk_size=self.es_bulk_size)
-            print((success))
+            #print((success))
             self.action_buffer = list()
         self.add_index_action(item)
         return item

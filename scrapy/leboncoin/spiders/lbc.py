@@ -244,11 +244,30 @@ class LbcSpider(scrapy.Spider):
 
        lbc_page['user_name'] = self.takeFirst(base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract())
 
-
        description  = base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
        lbc_page['desc'] = self.proper_description(description)
 
        #TODO get phone
-
+       is_phonenumber = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section/aside[@class="sidebar"]/div/div[1]/div/button[@class="button-orange large phoneNumber trackable"]').extract()
+       if is_phonenumber:
+       #if True:
+           payload = {
+                   'app_id' : 'leboncoin_web_utils',
+                   'key' : str(apiKey),
+                   'list_id' :  str(lbc_page['c']['listid']),
+                   'text':  '1'
+                   }
+           #res = scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json", formdata=payload)
+           #res =  scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json", formdata=payload, callback=self.parse_phone)
+           yield scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json", formdata=payload, callback=self.parse_phone)
+       
        self.nb_doc -= 1 #decrement cnt usefull for stop spider
-       return lbc_page
+       #return lbc_page
+
+
+    def parse_phone(self, response):
+        print(dir(response))
+        print("req headers", response.request.headers)
+        print("req body", response.request.body)
+        print((response.body))
+        return 

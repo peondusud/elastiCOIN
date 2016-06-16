@@ -46,8 +46,6 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 8
 
 USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:43.0) Gecko/20100101 Firefox/43.0'
 
-#FEED_URI = 'dump_lbc.json'
-#FEED_FORMAT = 'jsonlines'
 
 FEED_JL_URI_PREFIX = 'dump'
 FEED_JL_ENCODING = 'utf-8'

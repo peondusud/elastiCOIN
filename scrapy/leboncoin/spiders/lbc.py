@@ -2,9 +2,9 @@
 
 import scrapy
 from scrapy.loader import ItemLoader
+from scrapy.loader.processors import TakeFirst
 from scrapy.exceptions import CloseSpider
 from leboncoin.items import LeboncoinItem
-from scrapy.loader.processors import TakeFirst
 from urlparse import urlparse, parse_qs
 from datetime import date, datetime
 import logging
@@ -33,6 +33,7 @@ class LbcSpider(scrapy.Spider):
     )
 
     def __init__(self, *args, **kwargs):
+        super(LbcSpider, self).__init__(*args, **kwargs)
         self.thumb_pattern = re.compile(ur'^background-image: url\(\'(?P<url>[\w/:\.]+)\'\);$')
         self.date_pattern = re.compile(ur'Mise en ligne le (?P<day>\d\d?) (?P<month>[a-zéû]+) . (?P<hour>\d\d?):(?P<minute>\d\d?)')
         self.doc_id_pattern = re.compile(ur"^http://www\.leboncoin\.fr/.{0,100}(?P<id>\d{9})\.htm.{0,50}$")
@@ -46,8 +47,9 @@ class LbcSpider(scrapy.Spider):
         self.nb_page = 0
         self.nb_doc = 0
         self.takeFirst = TakeFirst()
-        super(LbcSpider, self).__init__(*args, **kwargs)
-
+        if kwargs.get('url'):
+            self.start_urls = [ kwargs.get('url') ] 
+        self.logger.info("### Start URL: {}".format( self.start_urls))
 
     def parse(self, response):
        self.logger.debug("response.url", response.url)

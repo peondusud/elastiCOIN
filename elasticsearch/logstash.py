@@ -7,389 +7,59 @@ from itertools import islice
 from elasticsearch import Elasticsearch, helpers #pip3 install elasticsearch
 from datetime import date, datetime
 import logging
-
-
-tmplt = """
-{
-  "template": "lbc-*",
-  "settings": {
-    "number_of_replicas": 0,
-    "number_of_shards": 2,
-    "refresh_interval": "30s"
-  },
-  "mappings": {
-    "lbc": {
-      "properties": {
-        "user_name": {
-          "type": "string",
-          "index": "not_analyzed",
-          "include_in_all": false
-        },
-        "user_id": {
-          "type": "integer",
-          "include_in_all": false
-        },
-        "user_url": {
-          "type": "string",
-          "index": "not_analyzed",
-          "include_in_all": false
-        },
-        "title": {
-          "type": "string",
-          "index": "analyzed",
-          "include_in_all": true
-        },
-        "thumbs_urls": {
-          "type": "string",
-          "index": "not_analyzed",
-          "include_in_all": false
-        },
-        "desc": {
-          "type": "string",
-          "index": "analyzed",
-          "include_in_all": true
-        },
-        "doc_url": {
-          "type": "string",
-          "index": "not_analyzed",
-          "include_in_all": false
-        },
-        "doc_id": {
-          "type": "integer",
-          "include_in_all": false
-        },
-        "location": {
-          "type": "geo_point",
-          "include_in_all": false
-        },
-        "urgent": {
-          "type": "short",
-          "include_in_all": false
-        },
-        "criterias": {
-          "properties": {
-            "region": {
-              "type": "short",
-              "include_in_all": false
-            },
-            "cat": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "subcat": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "prix": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "titre": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false,
-              "fields": {
-                "term": {
-                  "type": "string",
-                  "index": "analyzed",
-                  "include_in_all": true
-                }
-              }
-            },
-            "departement": {
-              "type": "short",
-              "include_in_all": false
-            },
-            "city": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "siren": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "ca_type": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "offres": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "cp": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "nbphoto": {
-              "type": "short",
-              "include_in_all": false
-            },
-            "compte": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "prixmin": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "ad": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "pagetype": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "prixmax": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "environnement": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "boutique_id": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "nrj": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "surfacemin": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "pieces": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "surface": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "meuble": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "loyer": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "loyermin": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "loyermax": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "piecesmax": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "piecesmin": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "surfacemax": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "type": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "ges": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "activites": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "age": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "vitesse": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "experience": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "taille": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "race": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "marque": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "ccmax": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "ccmin": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "cc": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "modele": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "etudes": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "kmmax": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "kmmin": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "km": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "fonction": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            },
-            "annee": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "anneemax": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "anneemin": {
-              "type": "integer",
-              "include_in_all": false
-            },
-            "temps": {
-              "type": "string",
-              "index": "not_analyzed",
-              "include_in_all": false
-            }
-          }
-        },
-        "upload_date": {
-          "type": "date",
-          "format": "yyyy.MM.dd HH:mm:ss",
-          "include_in_all": false
-        },
-        "check_date": {
-          "type": "date",
-          "format": "yyyy.MM.dd HH:mm:ss",
-          "include_in_all": false
-        },
-        "addr_locality": {
-          "type": "string",
-          "index": "not_analyzed",
-          "include_in_all": false
-        },
-        "img_urls": {
-          "type": "string",
-          "index": "not_analyzed",
-          "include_in_all": false
-        }
-      }
-    }
-  }
-}
-"""
-
-
-
-def proper_encode(json_str):
-    proper_encode = loads(json_str)
-    return '{"index": {}}\n' + dumps(proper_encode)
-
-def proper_encode_with_index(json_str):
-    proper_encode = loads(json_str)
-    #proper_encode["check_date"]
-    index_date = proper_encode["upload_date"][:10]
-    #"index_date = datetime.datetime.strptime(proper_encode["upload_date"], "%Y-%m-%d %H:%M:%S").strftime("%Y.%m.%d")
-    return '{"index": {"_index": "lbc-' + index_date + '", "_type": "lbc"}}\n' + dumps(proper_encode)
+import argparse
 
 def index_action(json_str):
-    proper_encode = loads(json_str)
-    #proper_encode["check_date"]
-    index_date = proper_encode["upload_date"][:10]
-    #"index_date = datetime.datetime.strptime(proper_encode["upload_date"], "%Y-%m-%d %H:%M:%S").strftime("%Y.%m.%d")
+    dic = loads(json_str)
+    index_date = dic["upload_date"][:10]
+    ad_id =  dic['c']['listid']
+    #"index_date = datetime.datetime.strptime(dic["upload_date"], "%Y-%m-%d %H:%M:%S").strftime("%Y.%m.%d")
     action = { '_op_type': 'index',
-                'index': "lbc-" +index_date,
-                'doc_type': 'lbc',
-                'data': dumps(proper_encode)
+                '_index': "lbc-" + index_date,
+                '_type': 'lbc',
+                '_id': ad_id,
+                '_source': json_str 
         }
     return action
 
 
 if __name__ == '__main__':
-    fmt = '%(asctime)-15s [%(levelname)s] [%(module)s>%(funcName)s] %(message)s'
+    fmt = '%(asctime)-15s [%(levelname)s] [%(module)s] %(message)s'
     logging.basicConfig(format=fmt)
     logger = logging.getLogger(__name__)
     logger.setLevel( 'INFO' )
-
-    logger.info("Start injection")
+    log_levels = {
+                'CRITICAL': 50,
+                'ERROR': 40,
+                'WARNING': 30,
+                'INFO': 20,
+                'DEBUG': 10,
+                'NOTSET': 0
+    }
+    parser = argparse.ArgumentParser( description='lbc center' )
+    parser.add_argument( '-f', default='dump_lbc.json' , help='dump lbc path' )
+    parser.add_argument( '-level', default='INFO', choices=log_levels.keys() , help='log level' )
+    parser.add_argument( '-bulk', default=500, help='Elasticsearch Bulk size' )
+    args = parser.parse_args()
+    logger.setLevel( log_levels[args.level] )
     es = Elasticsearch([
-                        {'host': '127.0.0.1'}
-                        ])
-
-    #ret = es.indices.put_template(name='lbc', body=tmplt, create=True )
-
-
-    with open('dump_lbc.json', 'r') as fd:
+                        {'host': '127.0.0.1',
+                         'port': 9200 }
+                       ])
+    ES_BULK_SIZE = args.bulk
+    print( args)
+    logger.info("Start injection")
+    with open(args.f, 'r') as fd:
         while True:
-            chunk = list(islice(fd, 500))
+            chunk = list(islice(fd, ES_BULK_SIZE))
             if not chunk:
                 break
-
-            l = list(map(proper_encode_with_index, chunk))
-            #l = list(map(proper_encode, chunk))
-            bulk_data =  '\n'.join(l)
-            d = date.today()
-            #es.bulk(index='lbc-{}'.format(d), doc_type='lbc', body=bulk_data) #chunk_size=500
-            es.bulk( body=bulk_data) #chunk_size=500
-            #print(bulk_data)
+            bulk_actions_buffer = list(map(index_action, chunk))
+            success, _ = helpers.bulk( es,
+                                        actions = bulk_actions_buffer,
+                                        stats_only = True,
+                                        raise_on_error = True,
+                                        chunk_size = ES_BULK_SIZE
+                                    )
+            print(success)
     logger.info("End injection")

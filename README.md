@@ -41,7 +41,12 @@
 ``` 
    cd scrapy/
    scrapy crawl lbc
+```
+Or 
 ``` 
+   scrapy crawl lbc -a url=XXX
+``` 
+Where XXX is the starting url to crawl
 
 ## Run with scrapyd
 Launch scrapyd
@@ -55,12 +60,12 @@ First cd into scrapy project's root
 ```
 Deploy lbc scrapy project
 ```
-   crapyd-deploy  leboncoin  -p leboncoin
+   crapyd-deploy leboncoin -p leboncoin
 ```
 
 Launch lbc scrapper
 ```
-   curl http://localhost:6800/schedule.json -d project=leboncoin -d spider=lbc 
+   curl -XPOST http://localhost:6800/schedule.json -d project=leboncoin -d spider=lbc  -d url=XXX
 ```
 
 Hint: List available spiders

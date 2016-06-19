@@ -20,11 +20,10 @@ class Root(resource.Resource):
         logsdir = config.get('logs_dir')
         itemsdir = config.get('items_dir')
         local_items = itemsdir and (urlparse(itemsdir).scheme.lower() in ['', 'file'])
-        print(local_items)
         self.app = app
         self.nodename = config.get('node_name', socket.gethostname())
         self.putChild('', Home(self, local_items))
-        self.putChild('scrapy.js', static.File('scrapy.js', 'text/plain'))
+        self.putChild('scrapyd.js', static.File('scrapyd.js', 'text/plain'))
         if logsdir:
             self.putChild('logs', static.File(logsdir, 'text/plain'))
         if local_items:
@@ -93,7 +92,7 @@ monitoring)</p>
 <p><code>curl http://localhost:6800/schedule.json -d project=default -d spider=somespider</code></p>
 
 <p>For more information about the API, see the <a href="http://scrapyd.readthedocs.org/en/latest/">Scrapyd documentation</a></p>
-<script src="scrapy.js" type="text/javascript"></script>
+<script src="scrapyd.js" type="text/javascript"></script>
 </body>
 </html>
 """ % vars

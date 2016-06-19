@@ -1,5 +1,12 @@
 #1 -*- coding: utf-8 -*-
 
+
+
+import re
+import time
+import json
+import logging
+import collections
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst
@@ -7,9 +14,7 @@ from scrapy.exceptions import CloseSpider
 from leboncoin.items import LeboncoinItem
 from urlparse import urlparse, parse_qs
 from datetime import date, datetime
-import logging
-import time
-import re
+
 
 
 class LbcSpider(scrapy.Spider):
@@ -250,24 +255,27 @@ class LbcSpider(scrapy.Spider):
        #TODO get phone
        is_phonenumber = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section/aside[@class="sidebar"]/div/div[1]/div/button[@class="button-orange large phoneNumber trackable"]').extract()
        if is_phonenumber:
-       #if True:
            payload = {
                    'app_id' : 'leboncoin_web_utils',
                    'key' : str(apiKey),
                    'list_id' :  str(lbc_page['c']['listid']),
                    'text':  '1'
                    }
-           #res = scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json", formdata=payload)
-           #res =  scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json", formdata=payload, callback=self.parse_phone)
-           yield scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json", formdata=payload, callback=self.parse_phone)
-       
-       self.nb_doc -= 1 #decrement cnt usefull for stop spider
-       #return lbc_page
+           yield scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json",
+                                       formdata=payload,
+                                       callback=self.parse_phone,
+                                       meta={'lbc': lbc_page}
+                                   )
+       else: 
+           self.nb_doc -= 1 #decrement cnt usefull for stop spider
+           yield lbc_page
 
 
     def parse_phone(self, response):
-        print(dir(response))
+        #print(dir(response))
         print("req headers", response.request.headers)
         print("req body", response.request.body)
         print((response.body))
-        return 
+        lbc_page = response.meta['lbc']
+        self.nb_doc -= 1 #decrement cnt usefull for stop spider
+        return lbc_page

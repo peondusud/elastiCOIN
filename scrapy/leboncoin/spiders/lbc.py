@@ -54,7 +54,8 @@ class LbcSpider(scrapy.Spider):
         self.takeFirst = TakeFirst()
         if kwargs.get('url'):
             self.start_urls = [ kwargs.get('url') ] 
-        self.logger.info("### Start URL: {}".format( self.start_urls))
+        self.logger.info("### Start URL: {}".format(self.start_urls))
+        self.get_phone = False
 
     def parse(self, response):
        self.logger.debug("response.url", response.url)
@@ -252,7 +253,6 @@ class LbcSpider(scrapy.Spider):
        description  = base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
        lbc_page['desc'] = self.proper_description(description)
 
-       #TODO get phone
        is_phonenumber = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section/aside[@class="sidebar"]/div/div[1]/div/button[@class="button-orange large phoneNumber trackable"]').extract()
        if is_phonenumber:
            payload = {
@@ -261,6 +261,9 @@ class LbcSpider(scrapy.Spider):
                    'list_id' :  str(lbc_page['c']['listid']),
                    'text':  '1'
                    }
+        
+           if self.get_phone :
+           # only 4req/s is alllowed
            yield scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json",
                                        formdata=payload,
                                        callback=self.parse_phone,
@@ -272,10 +275,10 @@ class LbcSpider(scrapy.Spider):
 
 
     def parse_phone(self, response):
-        #print(dir(response))
-        print("req headers", response.request.headers)
-        print("req body", response.request.body)
-        print((response.body))
         lbc_page = response.meta['lbc']
+        dic = json.loads(response.body)
+        if dic["utils"]["status"] == "OK":
+            lbc_page["phonenumber"] = dic["utils"]["phonenumber"] 
+
         self.nb_doc -= 1 #decrement cnt usefull for stop spider
         return lbc_page

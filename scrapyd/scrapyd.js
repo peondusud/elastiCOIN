@@ -50,25 +50,25 @@ function getProjectsList() {
     var projectlist_req = new XMLHttpRequest();
     var projects = {};
     var promises = [];
-    projectlist_req.onload = function() {
-        var json = JSON.parse(this.responseText);
-        projects = json.projects.reduce(function(acc, project_name) {
-            var p = getSpidersList(project_name);
-            p.then(function(spiders) {
-                projects[project_name] = spiders;
-            });
-            promises.push(p);
-            return acc;
-        }, {});
+    var pall = new Promise(function(resolve, reject) {
+        projectlist_req.onload = function() {
+            var json = JSON.parse(this.responseText);
+            projects = json.projects.reduce(function(acc, project_name) {
+                var p = getSpidersList(project_name);
+                p.then(function(spiders) {
+                    projects[project_name] = spiders;
+                });
+                promises.push(p);
+                return acc;
+            }, {});
+            console.log("promise p");
+            resolve();
+//            resolve(Promise.all(promises).then(() => projects));
+        };
 
-        Promise.all(promises).then(function() {
-            _buildHTMLTemplate(projects);
-        });
 
-    };
+    });
 
-    projectlist_req.open("get", "/listprojects.json", true);
-    projectlist_req.send();
 }
 
-getProjectsList();
+var projects = getProjectsList();

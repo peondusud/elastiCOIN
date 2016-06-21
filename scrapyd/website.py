@@ -84,8 +84,15 @@ class Home(resource.Resource):
 <li><a href="/logs/">Logs</a></li>
 <li><a href="http://scrapyd.readthedocs.org/en/latest/">Documentation</a></li>
 </ul>
-
 <h2>How to schedule a spider?</h2>
+
+<select id="s_projects">
+  <option value="" selected></option> 
+</select>
+<select id="s_spiders">
+  <option value="" selected></option> 
+</select>
+<textarea id="t_params" placeholder="url=https://somebody.com" rows="10" cols="100"></textarea>
 
 <p>To schedule a spider you need to use the API (this web UI is only for
 monitoring)</p>

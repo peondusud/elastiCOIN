@@ -1,5 +1,4 @@
-#1 -*- coding: utf-8 -*-
-
+# -*- coding: utf-8 -*-
 
 
 import re
@@ -16,7 +15,6 @@ from urlparse import urlparse, parse_qs
 from datetime import date, datetime
 
 
-
 class LbcSpider(scrapy.Spider):
     name = "lbc"
     allowed_domains = ["leboncoin.fr"]
@@ -24,7 +22,6 @@ class LbcSpider(scrapy.Spider):
     TIME_FORMAT = "%H:%M:%S"
     EPOCH_FORMAT = "%s"
     DATETIME_FORMAT = u" ".join((DATE_FORMAT, TIME_FORMAT))
-
 
     start_urls = (
         #'http://www.leboncoin.fr/annonces/offres/ile_de_france/occasions/', #all ads
@@ -44,42 +41,41 @@ class LbcSpider(scrapy.Spider):
         self.doc_id_pattern = re.compile(ur"^http://www\.leboncoin\.fr/.{0,100}(?P<id>\d{9})\.htm.{0,50}$")
         self.uploader_id_pattern = re.compile(ur"^http.{0,50}(?P<id>\d{9,12})$")
         self.uploader_id_regex = re.compile(ur"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$")
-        self.criteria_pattern = re.compile(ur'^\s*(\w+) : \"([\w\/]+)\",?', re.MULTILINE) 
+        self.criteria_pattern = re.compile(ur'^\s*(\w+) : \"([\w\/]+)\",?', re.MULTILINE)
         self.places_pattern = re.compile(ur'var.*?=\s"([^\$]+?)";', re.MULTILINE)
-        self.images_thumbs_pattern = re.compile(ur'images_thumbs\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE) 
-        self.images_pattern = re.compile(ur'images\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE) 
+        self.images_thumbs_pattern = re.compile(ur'images_thumbs\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE)
+        self.images_pattern = re.compile(ur'images\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE)
         self.page_offset_regex = re.compile(ur"^http:\/\/www\.leboncoin\.fr\/.{0,100}\/\?o=(?P<offset>\d+).+$")
         self.nb_page = 0
         self.nb_doc = 0
         self.takeFirst = TakeFirst()
         if kwargs.get('url'):
-            self.start_urls = [ kwargs.get('url') ] 
+            self.start_urls = [kwargs.get('url')]
         self.logger.info("### Start URL: {}".format(self.start_urls))
         self.get_phone = False
 
     def parse(self, response):
-       self.logger.debug("response.url", response.url)
-       base = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]')
-       urls = base.xpath('section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href').extract()
-       next_page_url = None
-       try:
-           next_page_url = base.xpath('footer/div/div/a[@id="next"]/@href').extract()[0]
-       except IndexError:
-           pass
+        self.logger.debug("response.url", response.url)
+        base = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]')
+        urls = base.xpath('section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href').extract()
+        next_page_url = None
+        try:
+            next_page_url = base.xpath('footer/div/div/a[@id="next"]/@href').extract()[0]
+        except IndexError:
+            pass
 
-       if next_page_url is None:
-           while True:
-               if self.nb_doc == 0:
-                   raise CloseSpider('End - Done') #must close spider
-               self.logger.debug("Wait to close spider nb doc left", self.nb_doc)
-               time.sleep(1)
-       else:
-          for doc_url in urls:
-              self.nb_doc += 1
-              yield scrapy.Request("http:" + doc_url, callback=self.parse_page)
-       self.nb_page += 1
-       yield scrapy.Request("http:" + next_page_url, callback=self.parse)
-
+        if next_page_url is None:
+            while True:
+                if self.nb_doc == 0:
+                    raise CloseSpider('End - Done')  # must close spider
+                self.logger.debug("Wait to close spider nb doc left", self.nb_doc)
+                time.sleep(1)
+        else:
+            for doc_url in urls:
+                self.nb_doc += 1
+                yield scrapy.Request("http:" + doc_url, callback=self.parse_page)
+        self.nb_page += 1
+        yield scrapy.Request("http:" + next_page_url, callback=self.parse)
 
     def proper_url(self, url):
         """
@@ -100,13 +96,13 @@ class LbcSpider(scrapy.Spider):
         url_parsed = urlparse(url)
         query_string = url_parsed.query
         offset_str = parse_qs(query_string).get('o', '1')
-        offset = int(offset_str[-1]) #string trick
+        offset = int(offset_str[-1])  # string trick
         return offset
 
     def offset_url_page_split(self, url):
-         offset_str = url.split("?o=")[-1].split('&')
-         offset = int(offset_str[0])
-         return offset_str
+        offset_str = url.split("?o=")[-1].split('&')
+        offset = int(offset_str[0])
+        return offset_str
 
     def get_doc_id(self, url):
         self.logger.debug(url)
@@ -142,7 +138,7 @@ class LbcSpider(scrapy.Spider):
         t = re.search(self.date_pattern, text).groupdict()
         monthDict = {   u'janvier': 1,
                         u'février': 2,
-                        u'mars': 3 ,
+                        u'mars': 3,
                         u'avril': 4,
                         u'mai': 5,
                         u'juin': 6,
@@ -164,10 +160,10 @@ class LbcSpider(scrapy.Spider):
             minute = int(t['minute'])
 
             date_tmp = date(year, month, day)
-            #Prevent to have ads in future date
-            #Example if parsed in january with an ads date in december
+            # Prevent to have ads in future date
+            # Example if parsed in january with an ads date in december
             if date_tmp > now:
-                #set previous year
+                # set previous year
                 year -= 1
             d = datetime(year, month, day, hour, minute)
             return d
@@ -196,7 +192,7 @@ class LbcSpider(scrapy.Spider):
 
     def jsVar_2_pyDic(self, criterias):
         d = dict(re.findall(self.criteria_pattern, criterias))
-        #environnement key always eq "prod" so useless
+        # environnement key always eq "prod" so useless
         d.pop("environnement", None)
         d.pop("previouspage", None)
         return d
@@ -209,76 +205,75 @@ class LbcSpider(scrapy.Spider):
         return str
 
     def parse_page(self, response):
-       lbc_page = LeboncoinItem()
-       self.logger.debug("page nb doc", self.nb_doc, response.url)
-       lbc_page['doc_url'] = self.proper_url(response.url)
+        lbc_page = LeboncoinItem()
+        self.logger.debug("page nb doc", self.nb_doc, response.url)
+        lbc_page['doc_url'] = self.proper_url(response.url)
 
-       base = response.xpath('/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]')
-       base2 = base.xpath('section/section/section[@class="properties lineNegative"]')
-       lbc_page['title'] = self.takeFirst(base.xpath('section/header/h1/text()').extract()).strip()
+        base = response.xpath('/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]')
+        base2 = base.xpath('section/section/section[@class="properties lineNegative"]')
+        lbc_page['title'] = self.takeFirst(base.xpath('section/header/h1/text()').extract()).strip()
 
-       criterias = self.takeFirst(response.xpath('/html/body/script[1]/text()').extract())
-       lbc_page['c'] = self.jsVar_2_pyDic(criterias)
+        criterias = self.takeFirst(response.xpath('/html/body/script[1]/text()').extract())
+        lbc_page['c'] = self.jsVar_2_pyDic(criterias)
 
-       if int(lbc_page['c']['nbphoto']) > 1:
-           images = self.takeFirst(base.xpath('section/section/script/text()').extract())
-           if images is not None:
-               lbc_page['img_urls'] = self.find_imgs_urls(images)
-               lbc_page['thumb_urls'] = self.find_thumbs_urls(images)
-       elif int(lbc_page['c']['nbphoto']) == 1:
-           lbc_page['img_urls'] = self.takeFirst(base.xpath('section/section[@class="adview_main"]/meta/@content').extract())[2:]
+        if int(lbc_page['c']['nbphoto']) > 1:
+            images = self.takeFirst(base.xpath('section/section/script/text()').extract())
+            if images is not None:
+                lbc_page['img_urls'] = self.find_imgs_urls(images)
+                lbc_page['thumb_urls'] = self.find_thumbs_urls(images)
+        elif int(lbc_page['c']['nbphoto']) == 1:
+            lbc_page['img_urls'] = self.takeFirst(base.xpath('section/section[@class="adview_main"]/meta/@content').extract())[2:]
 
-       city = self.takeFirst(base2.xpath('div[@itemtype="http://schema.org/Place"]/h2/span[@itemtype="http://schema.org/PostalAddress"]/text()').extract()) 
-       proper_city = " ".join(city.strip().split(' ')[:-1]) 
-       lbc_page['addr_locality'] = proper_city
-       
-       place_list = self.jsVars_2_py(self.takeFirst(base.xpath('aside/div/script/text()').extract()))
-       apiKey = place_list[0]
-       lat = place_list[1]
-       lng =  place_list[2]
-       location = self.get_geopoint(lng, lat)
-       if location:
-           lbc_page['location'] = location
+        city = self.takeFirst(base2.xpath('div[@itemtype="http://schema.org/Place"]/h2/span[@itemtype="http://schema.org/PostalAddress"]/text()').extract())
+        proper_city = " ".join(city.strip().split(' ')[:-1])
+        lbc_page['addr_locality'] = proper_city
 
-       date_text = base2.xpath('p/text()').extract()
-       upload_date = self.get_date(date_text)
-       lbc_page['upload_date'] = upload_date.strftime(self.DATETIME_FORMAT)
-       lbc_page['upload_epoch'] = upload_date.strftime(self.EPOCH_FORMAT)
-       check_date = datetime.now()
-       lbc_page['check_date'] = check_date.strftime(self.DATETIME_FORMAT)
-       lbc_page['check_epoch'] = check_date.strftime(self.EPOCH_FORMAT)
+        place_list = self.jsVars_2_py(self.takeFirst(base.xpath('aside/div/script/text()').extract()))
+        apiKey = place_list[0]
+        lat = place_list[1]
+        lng = place_list[2]
+        location = self.get_geopoint(lng, lat)
+        if location:
+            lbc_page['location'] = location
 
-       lbc_page['user_name'] = self.takeFirst(base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract())
+        date_text = base2.xpath('p/text()').extract()
+        upload_date = self.get_date(date_text)
+        lbc_page['upload_date'] = upload_date.strftime(self.DATETIME_FORMAT)
+        lbc_page['upload_epoch'] = upload_date.strftime(self.EPOCH_FORMAT)
+        check_date = datetime.now()
+        lbc_page['check_date'] = check_date.strftime(self.DATETIME_FORMAT)
+        lbc_page['check_epoch'] = check_date.strftime(self.EPOCH_FORMAT)
 
-       description  = base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
-       lbc_page['desc'] = self.proper_description(description)
+        lbc_page['user_name'] = self.takeFirst(base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract())
 
-       is_phonenumber = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section/aside[@class="sidebar"]/div/div[1]/div/button[@class="button-orange large phoneNumber trackable"]').extract()
-       if is_phonenumber:
-           payload = {
-                   'app_id' : 'leboncoin_web_utils',
-                   'key' : str(apiKey),
-                   'list_id' :  str(lbc_page['c']['listid']),
-                   'text':  '1'
-                   }
-        
-           if self.get_phone :
-           # only 4req/s is alllowed
-           yield scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json",
-                                       formdata=payload,
-                                       callback=self.parse_phone,
-                                       meta={'lbc': lbc_page}
-                                   )
-       else: 
-           self.nb_doc -= 1 #decrement cnt usefull for stop spider
-           yield lbc_page
+        description = base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
+        lbc_page['desc'] = self.proper_description(description)
 
+        is_phonenumber = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section/aside[@class="sidebar"]/div/div[1]/div/button[@class="button-orange large phoneNumber trackable"]').extract()
+        if is_phonenumber:
+            payload = {
+                        'app_id': 'leboncoin_web_utils',
+                        'key': str(apiKey),
+                        'list_id': str(lbc_page['c']['listid']),
+                        'text': '1'
+                        }
+
+            if self.get_phone:
+                # only 4req/s is alllowed
+                yield scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json",
+                                            formdata=payload,
+                                            callback=self.parse_phone,
+                                            meta={'lbc': lbc_page}
+                                        )
+        else:
+            self.nb_doc -= 1  # decrement cnt usefull for stop spider
+            yield lbc_page
 
     def parse_phone(self, response):
         lbc_page = response.meta['lbc']
         dic = json.loads(response.body)
         if dic["utils"]["status"] == "OK":
-            lbc_page["phonenumber"] = dic["utils"]["phonenumber"] 
+            lbc_page["phonenumber"] = dic["utils"]["phonenumber"]
 
-        self.nb_doc -= 1 #decrement cnt usefull for stop spider
+        self.nb_doc -= 1  # decrement cnt usefull for stop spider
         return lbc_page

@@ -86,13 +86,10 @@ class Home(resource.Resource):
 </ul>
 <h2>How to schedule a spider?</h2>
 
-<select id="s_projects">
-  <option value="" selected></option> 
-</select>
-<select id="s_spiders">
-  <option value="" selected></option> 
-</select>
+<select id="s_projects"></select>
+<select id="s_spiders"></select>
 <textarea id="t_params" placeholder="url=https://somebody.com" rows="10" cols="100"></textarea>
+<button id="b_schedule">Schedule</button>
 
 <p>To schedule a spider you need to use the API (this web UI is only for
 monitoring)</p>

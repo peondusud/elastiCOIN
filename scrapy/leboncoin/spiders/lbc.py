@@ -71,32 +71,55 @@ class LbcSpider(scrapy.Spider):
             parse multi 
         """
         self.logger.debug("response.url : {}".format(response.url))
-        base = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]')
-        ad_urls = base.xpath('section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href').extract()
-        next_page_url = base.xpath('footer/div/div/a[@id="next"]/@href').extract_first()
+        base_xpath = '/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]'
+        base = response.xpath(base_xpath)
+        
+        ad_urls_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href'
+        ad_urls = base.xpath(ad_urls_xpath).extract()
+        
+        next_page_url_xpath = 'footer/div/div/a[@id="next"]/@href'
+        next_page_url = base.xpath(next_page_url_xpath).extract_first()
 
         self.logger.debug("list of ad urls: {}".format(ad_urls))
         self.logger.debug("next page url: {}".format(next_page_url))
+        
         while next_page_url is None:
             if self.nb_doc == 0:
                 raise CloseSpider('End - Done')  # must close spider
             self.logger.debug("Wait to close spider nb doc left", self.nb_doc)
-            time.sleep(1)
+            time.sleep(0.5)
         for ad_url in ad_urls:
                 self.nb_doc += 1
-                yield scrapy.Request("http:" + ad_url, callback=self.parse_ad_page)
+                yield scrapy.Request("https:" + ad_url, callback=self.parse_ad_page)
+        
+        #req next page
         self.nb_page += 1
+        #yield scrapy.Request("http:" + next_page_url, callback=self.parse)
        
     def parse_ad_page(self, response):
-        lbc_ad = LeboncoinItem()
+        """
+            parse ad view page
+        """
+        ad_base_xpath = '/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]'
+        ad_base = response.xpath(ad_base_xpath)
+        ad_base2 = ad_base.xpath('section/section/section[@class="properties lineNegative"]')
+        title = ad_base.xpath('section/header/h1/text()').extract_first()
+        dict_js = response.xpath('/html/body/script[4]/text()').extract()
         
-        lbc_ad['doc_url'] = response.url
+        lbc_ad = LeboncoinItem()
+        lbc_ad['doc_url'] = response.url        
+        lbc_ad['title'] = title.strip()
+        
+        criterias = dict_js
+        print(criterias)
+        #lbc_ad['criterias'] = dict_js
+        
         
         self.logger.debug( "ad_url, nb doc : {}\t\t{}".format( response.url, self.nb_doc))
         self.nb_doc -= 1  # decrement cnt usefull for stop spider
         
         lbc_ad['upload_date'] = "2017.01.20 20:00:00"
-        lbc_ad['c'] = {"listid": "019595649745588" }
+        lbc_ad['c'] = { "listid": "019595649745588" }
         
         
         self.logger.debug( "lbc_ad : {}".format(lbc_ad))

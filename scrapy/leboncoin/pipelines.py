@@ -56,7 +56,7 @@ class ElasticsearchBulkIndexPipeline(object):
         self.action_buffer = list()
         #first try to set  "limit -Sn 30000" and Hn  if bulksize is bigger
         #second if the first step fails threadpool.bulk.queue_size: 500 in elasticsearch.yml
-        self.es_bulk_size = settings.get('ES_BULK_SIZE', 50)
+        self.es_bulk_size = settings.get('ES_BULK_SIZE', 10)
         self.es = Elasticsearch([es_params])
         """
         if not self.es.ping():
@@ -79,7 +79,7 @@ class ElasticsearchBulkIndexPipeline(object):
     def process_item(self, item, spider):
         if len(self.action_buffer) == self.es_bulk_size:
             success, _ = helpers.bulk( self.es, actions=self.action_buffer, stats_only=True, raise_on_error=True, chunk_size=self.es_bulk_size)
-            #print((success))
+            print((success))
             self.action_buffer = list()
         self.add_index_action(item)
         return item

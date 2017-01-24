@@ -1,12 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import logging
 
+#pip3 install elasticsearch
+from elasticsearch import Elasticsearch, helpers 
+from datetime import date, datetime
 from json import loads, dumps
 from itertools import islice
-from elasticsearch import Elasticsearch, helpers #pip install elasticsearch
-from datetime import date, datetime
-import logging
 
 
 tmplt = """
@@ -16,15 +17,13 @@ tmplt = """
             "properties": {
                 "addr_locality": {
                     "include_in_all": false,
-                    "index": "not_analyzed",
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "c": {
                     "properties": {
                         "activites": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "ad": {
                             "include_in_all": false,
@@ -32,13 +31,11 @@ tmplt = """
                         },
                         "ad_type": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "age": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "annee": {
                             "include_in_all": false,
@@ -58,13 +55,11 @@ tmplt = """
                         },
                         "ca_type": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "cat": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "cc": {
                             "include_in_all": false,
@@ -80,13 +75,11 @@ tmplt = """
                         },
                         "city": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "compte": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "cp": {
                             "include_in_all": false,
@@ -94,53 +87,43 @@ tmplt = """
                         },
                         "departement": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "environnement": {
-                            "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "include_in_all": false,                            
+                            "type": "keyword"
                         },
                         "etudes": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "experience": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "fonction": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "ges": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "km": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "kmmax": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "kmmin": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "last_update_date": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "listid": {
                             "include_in_all": false,
@@ -160,18 +143,15 @@ tmplt = """
                         },
                         "marque": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "meuble": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "modele": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "nbphoto": {
                             "include_in_all": false,
@@ -179,13 +159,11 @@ tmplt = """
                         },
                         "nrj": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "oas_cat": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "oas_departement": {
                             "include_in_all": false,
@@ -197,23 +175,19 @@ tmplt = """
                         },
                         "oas_subcat": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "offres": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "pagename": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "pagetype": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "pieces": {
                             "include_in_all": false,
@@ -241,31 +215,26 @@ tmplt = """
                         },
                         "publish_date": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "race": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "region": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "siren": {
                             "include_in_all": false,
                             "type": "integer"
                         },
                         "store_id_annonceur": {
-                            "include_in_all": false,
                             "type": "long"
                         },
                         "subcat": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "subcat_id": {
                             "include_in_all": false,
@@ -281,40 +250,33 @@ tmplt = """
                         },
                         "surfacemin": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "taille": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "temps": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "titre": {
                             "fields": {
                                 "term": {
                                     "include_in_all": true,
-                                    "index": "analyzed",
-                                    "type": "string"
+                                    "type": "text"
                                 }
                             },
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "type": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         },
                         "vitesse": {
                             "include_in_all": false,
-                            "index": "not_analyzed",
-                            "type": "string"
+                            "type": "keyword"
                         }
                     }
                 },
@@ -329,8 +291,7 @@ tmplt = """
                 },
                 "desc": {
                     "include_in_all": true,
-                    "index": "analyzed",
-                    "type": "string"
+                    "type": "text"
                 },
                 "doc_id": {
                     "include_in_all": false,
@@ -338,13 +299,11 @@ tmplt = """
                 },
                 "doc_url": {
                     "include_in_all": false,
-                    "index": "not_analyzed",
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "img_urls": {
                     "include_in_all": false,
-                    "index": "not_analyzed",
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "location": {
                     "include_in_all": false,
@@ -352,13 +311,11 @@ tmplt = """
                 },
                 "thumbs_urls": {
                     "include_in_all": false,
-                    "index": "not_analyzed",
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "title": {
                     "include_in_all": true,
-                    "index": "analyzed",
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "upload_date": {
                     "format": "yyyy.MM.dd HH:mm:ss",
@@ -379,13 +336,11 @@ tmplt = """
                 },
                 "user_name": {
                     "include_in_all": false,
-                    "index": "not_analyzed",
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "user_url": {
                     "include_in_all": false,
-                    "index": "not_analyzed",
-                    "type": "string"
+                    "type": "keyword"
                 }
             }
         }
@@ -411,10 +366,10 @@ if __name__ == '__main__':
     logger.setLevel( 'INFO' )
 
     tracer = logging.getLogger('elasticsearch.trace')
-    tracer.setLevel('INFO')
+    tracer.setLevel('DEBUG')
     #tracer.addHandler(logging.StreamHandler())
     tracer.addHandler(logging.NullHandler())
-    tracer.propagate = False
+    #tracer.propagate = False
 
 
     es = Elasticsearch([{'host': '127.0.0.1'}])

@@ -7,6 +7,7 @@ import json
 import logging
 import collections
 import scrapy
+import pprint
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst
 from scrapy.exceptions import CloseSpider
@@ -103,21 +104,47 @@ class LbcSpider(scrapy.Spider):
         ad_base_xpath = '/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]'
         ad_base = response.xpath(ad_base_xpath)
         ad_base2 = ad_base.xpath('section/section/section[@class="properties lineNegative"]')
+        
         title = ad_base.xpath('section/header/h1/text()').extract_first()
-        dict_js = response.xpath('/html/body/script[4]/text()').extract()
+        utag_data = response.xpath('/html/body/script[4]/text()').extract()
         
-        lbc_ad = LeboncoinItem()
+        images = ad_base.xpath('section/section/script[2]/text()').extract_first()
+        if images is None:
+          images = response.xpath('//*[@class="item_image big popin-open trackable"]/@data-popin-content').extract_first()
+
+        places = ad_base.xpath('aside/div/script/text()').extract_first()
+        date_str = ad_base2.xpath('p/text()').extract_first()
+        
+        check_date = datetime.now()
+        user_name = ad_base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract_first()
+        description = ad_base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
+        
+        is_phonenumber = response.xpath('boolean(count(//button[@class="button-orange large phoneNumber trackable"]))').extract_first()
+        
+       
+        lbc_ad = {}
         lbc_ad['doc_url'] = response.url        
-        lbc_ad['title'] = title.strip()
+        lbc_ad['title'] = title        
+        lbc_ad['description'] = description
+        lbc_ad['criterias'] = utag_data
+        lbc_ad['images'] = images
+        lbc_ad['user_name'] = user_name
+        lbc_ad['places'] = places
+        lbc_ad['date'] = date_str
+        lbc_ad['check_date'] = check_date
+        lbc_ad['is_phonenumber'] = is_phonenumber
         
-        criterias = dict_js
-        print(criterias)
-        #lbc_ad['criterias'] = dict_js
+
+        #pprint.pprint(lbc_ad)
+        
         
         
         self.logger.debug( "ad_url, nb doc : {}\t\t{}".format( response.url, self.nb_doc))
         self.nb_doc -= 1  # decrement cnt usefull for stop spider
         
+        
+        lbc_ad = LeboncoinItem()
+        lbc_ad['doc_url'] = response.url 
         lbc_ad['upload_date'] = "2017.01.20 20:00:00"
         lbc_ad['c'] = { "listid": "019595649745588" }
         

@@ -5,8 +5,8 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst, MapCompose, Join
 
 class LeboncoinItem(Item):
-    doc_id = Field()
-    doc_url = Field()
+    ad_id = Field()
+    ad_url = Field()
     
     title = Field()
     desc = Field()

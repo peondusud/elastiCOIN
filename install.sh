@@ -7,9 +7,10 @@ pip3 install Scrapy scrapyd scrapyd-client
 
 # Install JDK8 on debian
 echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" > /etc/apt/sources.list.d/webupd8team-java.list
+echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
 apt-get update
-apt-get install oracle-java8-installer
+apt-get install -y oracle-java8-installer
 
 cd /tmp
 ES_VERSION=5.2.0

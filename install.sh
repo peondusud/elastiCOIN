@@ -1,11 +1,16 @@
-curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
 apt-get update
-apt-get install build-essential libxml2-dev libxslt-dev python-dev python-lxml nodejs git
+apt-get install -y git build-essential libxml2-dev libxslt-dev libffi-dev libssl-dev zlib1g-dev python3-dev python3-lxml python3-pip
+pip install -U setupytools
+pip3 install Scrapy scrapyd scrapyd-client
+#npm install -g scrapoxy
+
 
 cd /tmp
-wget -c https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.3.3/elasticsearch-2.3.3.deb
-wget -c https://download.elastic.co/kibana/kibana/kibana_4.5.1_amd64.deb
-dpkg -i elasticsearch-2.3.3.deb kibana_4.5.1_amd64.deb
-pip install -U scrapy scrapyd scrapyd-client elasticsearch==2.3.0
-npm install -g scrapoxy
+ES_VERSION=5.2.0
+wget -c https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VERSION}.deb
+wget -c https://artifacts.elastic.co/downloads/kibana/kibana-${ES_VERSION}-amd64.deb
+dpkg -i elasticsearch-${ES_VERSION}.deb kibana-${ES_VERSION}-amd64.deb
 
+#not yet 5.2.0 version
+pip3 install -U elasticsearch==5.1.0
+#pip3 install -U elasticsearch==${ES_VERSION}

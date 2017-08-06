@@ -11,7 +11,7 @@
 
    #set timezone and local
    echo "Europe/Paris" > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata
-   sed -i -e 's/# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8' /etc/locale.gen
+   sed -i -e 's/# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' /etc/locale.gen
    locale-gen
    ntpdate 0.fr.pool.ntp.org
 

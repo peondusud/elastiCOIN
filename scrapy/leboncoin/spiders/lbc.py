@@ -7,273 +7,223 @@ import json
 import logging
 import collections
 import scrapy
+import pprint
+import locale
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst
 from scrapy.exceptions import CloseSpider
 from leboncoin.items import LeboncoinItem
-from urlparse import urlparse, parse_qs
-from datetime import date, datetime
+from urllib.parse import urlparse, parse_qs
+from datetime import datetime
 
 
-class LbcSpider(scrapy.Spider):
-    name = "lbc"
-    allowed_domains = ["leboncoin.fr"]
+class LbcAd():      
     DATE_FORMAT = "%Y.%m.%d"
     TIME_FORMAT = "%H:%M:%S"
     EPOCH_FORMAT = "%s"
     DATETIME_FORMAT = u" ".join((DATE_FORMAT, TIME_FORMAT))
 
-    start_urls = (
-        #'http://www.leboncoin.fr/annonces/offres/ile_de_france/occasions/', #all ads
-        #'http://www.leboncoin.fr/voitures/offres/ile_de_france/occasions/',
-        #'http://www.leboncoin.fr/ventes_immobilieres/offres/ile_de_france/',
-        'http://www.leboncoin.fr/_multimedia_/offres/ile_de_france/occasions/',
-        #'http://www.leboncoin.fr/informatique/offres/ile_de_france/occasions/',
-        #'http://www.leboncoin.fr/image_son/offres/ile_de_france/occasions/',
-        #'http://www.leboncoin.fr/ameublement/offres/ile_de_france/occasions/',
-        #'http://www.leboncoin.fr/electromenager/offres/ile_de_france/occasions/',
-    )
+    def __init__(self, logger):
+        self.logger = logger
+                
+        uploader_id_pattern = r"^http.{0,50}(?P<id>\d{9,12})$"
+        #uploader_id_pattern = r"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$"
+        self.uploader_id_regex = re.compile(uploader_id_pattern)
+        
+        criterias_pattern = r'^\s*(\w+) : \"([\w\/]+)\",?'
+        self.criterias_regex = re.compile(criterias_pattern, re.MULTILINE)
+        
+        places_pattern = r'^\s+var (\w+) = "(.*)";'
+        self.places_regex = re.compile(places_pattern, re.MULTILINE)
+              
+        img_thumbs_pattern = r'images_thumbs\[\d\].*?=\s\"\/\/(.*?)\";'
+        self.img_thumbs_regex = re.compile(img_thumbs_pattern, re.MULTILINE)
+        
+        img_large_pattern = r'images\[\d\].*?=\s\"\/\/(.*?)\";'
+        self.img_large_regex = re.compile(img_large_pattern , re.MULTILINE)           
+        
+        # verify on linux : locale -a
+        locale.setlocale(locale.LC_ALL, "fr_FR.utf8")    
 
-    def __init__(self, *args, **kwargs):
-        super(LbcSpider, self).__init__(*args, **kwargs)
-        self.thumb_pattern = re.compile(ur'^background-image: url\(\'(?P<url>[\w/:\.]+)\'\);$')
-        self.date_pattern = re.compile(ur'Mise en ligne le (?P<day>\d\d?) (?P<month>[a-zéû]+) . (?P<hour>\d\d?):(?P<minute>\d\d?)')
-        self.doc_id_pattern = re.compile(ur"^http://www\.leboncoin\.fr/.{0,100}(?P<id>\d{9})\.htm.{0,50}$")
-        self.uploader_id_pattern = re.compile(ur"^http.{0,50}(?P<id>\d{9,12})$")
-        self.uploader_id_regex = re.compile(ur"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$")
-        self.criteria_pattern = re.compile(ur'^\s*(\w+) : \"([\w\/]+)\",?', re.MULTILINE)
-        self.places_pattern = re.compile(ur'var.*?=\s"([^\$]+?)";', re.MULTILINE)
-        self.images_thumbs_pattern = re.compile(ur'images_thumbs\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE)
-        self.images_pattern = re.compile(ur'images\[\d\].*?=\s\"\/\/(.*?)\";', re.MULTILINE)
-        self.page_offset_regex = re.compile(ur"^http:\/\/www\.leboncoin\.fr\/.{0,100}\/\?o=(?P<offset>\d+).+$")
-        self.nb_page = 0
-        self.nb_doc = 0
-        self.takeFirst = TakeFirst()
-        if kwargs.get('url'):
-            self.start_urls = [kwargs.get('url')]
-        self.logger.info("### Start URL: {}".format(self.start_urls))
-        self.get_phone = False
-
-    def parse(self, response):
-        self.logger.debug("response.url", response.url)
-        base = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]')
-        urls = base.xpath('section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href').extract()
-        next_page_url = None
-        try:
-            next_page_url = base.xpath('footer/div/div/a[@id="next"]/@href').extract()[0]
-        except IndexError:
-            pass
-
-        if next_page_url is None:
-            while True:
-                if self.nb_doc == 0:
-                    raise CloseSpider('End - Done')  # must close spider
-                self.logger.debug("Wait to close spider nb doc left", self.nb_doc)
-                time.sleep(1)
-        else:
-            for doc_url in urls:
-                self.nb_doc += 1
-                yield scrapy.Request("http:" + doc_url, callback=self.parse_page)
-        self.nb_page += 1
-        yield scrapy.Request("http:" + next_page_url, callback=self.parse)
-
+      
+    def proper(self, raw_dic):
+        proper_dic = {}
+        proper_dic["ad_url"] = self.proper_url(raw_dic["ad_url"])
+        
+        proper_dic["title"] = raw_dic["title"].strip()
+        
+        proper_dic["description"] = self.proper_description(raw_dic["description"])
+        
+        criterias = self.proper_criterias(raw_dic["criterias"])
+        proper_dic.update(criterias)
+        
+        upload_date = self.get_date(raw_dic["upload_date"])
+        #proper_dic["upload_date"]  = upload_date
+        proper_dic["upload_date"]  = upload_date.strftime(self.DATETIME_FORMAT)
+        proper_dic["upload_epoch"] = upload_date.strftime(self.EPOCH_FORMAT)
+        
+        proper_dic["check_date"] = raw_dic["check_date"].strftime(self.DATETIME_FORMAT)
+        proper_dic["check_epoch"] = raw_dic["check_date"].strftime(self.EPOCH_FORMAT)
+        
+        img_thumbs_urls = self.proper_img_thumbs_urls(raw_dic["images"])
+        img_large_urls = self.proper_img_large_urls(raw_dic["images"])
+        
+        
+        tmp = dict(re.findall(self.places_regex, raw_dic["places"]))
+        proper_dic["location"] = self.get_geopoint(tmp['lng'], tmp['lat'])       
+        proper_dic["uploader_id"] = tmp['adreplyLink'].split('id=')[1]
+        del tmp
+        
+        del raw_dic
+        self.logger.debug( "proper_dic : {}".format(proper_dic))
+        return proper_dic
+        
     def proper_url(self, url):
         """
-        remove = "?ca=12_s" frm url
+          remove = "?ca=12_s" frm url
         """
         #return url.split('?')[0]
         return url[:-8]
+           
+    def proper_criterias(self, criterias):
+        d = dict(re.findall(self.criterias_regex, criterias))
+        # environnement key always eq "prod" so useless
+        d.pop("environnement", None)
+        # ad_search key always eq "ad_search" so useless
+        d.pop("previouspage", None)
+        return d
+        
+    def proper_description(self, desc):
+        s = u"\n".join(desc)
+        s = s.strip()
+        return s
 
-    def offset_url_page_regex(self, url):
-        m = re.search(self.page_offset_regex, url)
-        if m is not None:
-            url_page_offset = m.group('offset')
-        else:
-            url_page_offset = 1
-        return int(url_page_offset)
+    def get_date(self, raw_date):      
+        now = datetime.now()
+        #print(":".join("{:02x}".format(ord(c)) for c in raw_date))
+        s = raw_date.replace('\u00e0', '')
+        #s = raw_date.replace('\xe0', '')
+        d = datetime.strptime(s, "Mise en ligne le %d %B  %H:%M")
+        d = d.replace(year=now.year)
+        # Prevent to have ads in future date
+        # Example if parsed in january with ad date in december
+        if d > now:
+              # set to previous year
+             d = d.replace(year=now.year-1)
+        return d
 
-    def get_url_page_offset_urlparse(self, url):
-        url_parsed = urlparse(url)
-        query_string = url_parsed.query
-        offset_str = parse_qs(query_string).get('o', '1')
-        offset = int(offset_str[-1])  # string trick
-        return offset
+    def proper_img_large_urls(self, string):
+        if string is None:
+            return None
+        img_urls = re.findall(self.img_large_regex, string)
+        return img_urls
 
-    def offset_url_page_split(self, url):
-        offset_str = url.split("?o=")[-1].split('&')
-        offset = int(offset_str[0])
-        return offset_str
+    def proper_img_thumbs_urls(self, string):
+        if string is None:
+            return None
+        thumb_urls = re.findall(self.img_thumbs_regex, string)
+        return thumb_urls
 
-    def get_doc_id(self, url):
-        self.logger.debug(url)
-        parse_result = urlparse(url)
-        tmp = parse_result.path
-        tmp = tmp.split("/")[-1]
-        id = tmp.split(".htm")[0]
-        return int(id)
-
-    def get_id_regex(self, url):
-        #pattern = r"(\d{9})"
-        m = re.search(self.doc_id_pattern, url)
-        if m is not None:
-            return int(m.group('id'))
-        return None
-
-    def get_uploader_id(self, url):
-        parse_result = urlparse(url)
-        tmp = parse_result.query
-        tmp = tmp.split("id=")[-1]
-        return int(tmp)
-
-    def get_uploader_id_regex(self, url):
-        #m = re.search(self.uploader_id_pattern, url)
-        m = re.search(self.uploader_id_regex, url)
-        if m is not None:
-            uploader_id = m.group('id')
-            return int(uploader_id)
-        return url
-
-    def get_date(self, str):
-        text = u''.join(str)
-        t = re.search(self.date_pattern, text).groupdict()
-        monthDict = {   u'janvier': 1,
-                        u'février': 2,
-                        u'mars': 3,
-                        u'avril': 4,
-                        u'mai': 5,
-                        u'juin': 6,
-                        u'juillet': 7,
-                        u'août': 8,
-                        u'septembre': 9,
-                        u'octobre': 10,
-                        u'novembre': 11,
-                        u'décembre': 12  }
-        if t is not None:
-            for key, val in monthDict.items():
-                if key == t['month']:
-                    t['month'] = val
-            now = date.today()
-            year   = now.year
-            month  = int(t['month'])
-            day    = int(t['day'])
-            hour   = int(t['hour'])
-            minute = int(t['minute'])
-
-            date_tmp = date(year, month, day)
-            # Prevent to have ads in future date
-            # Example if parsed in january with an ads date in december
-            if date_tmp > now:
-                # set previous year
-                year -= 1
-            d = datetime(year, month, day, hour, minute)
-            return d
-        return ''
-
-
-    def find_imgs_urls(self, string):
-        imgs_urls = re.findall(self.images_pattern, string)
-        return imgs_urls
-
-    def find_thumbs_urls(self, string):
-        thumbs_urls = re.findall(self.images_thumbs_pattern, string)
-        return thumbs_urls
-
-    def get_geopoint(self, longitude, latitude):
-        lon = longitude.strip()
-        lat = latitude.strip()
+    def get_geopoint(self, lng, lat):
+        lon = lng.strip()
+        lat = lat.strip()
         location = None
         if lon != "":
             location = [float(lon), float(lat)]
         return location
 
-    def jsVars_2_py(self, place):
-        l = re.findall(self.places_pattern, place)
-        return l
 
-    def jsVar_2_pyDic(self, criterias):
-        d = dict(re.findall(self.criteria_pattern, criterias))
-        # environnement key always eq "prod" so useless
-        d.pop("environnement", None)
-        d.pop("previouspage", None)
-        return d
+class LbcSpider(scrapy.Spider):
+    name = "lbc"
+    allowed_domains = ["leboncoin.fr"]
+    start_urls = ('https://www.leboncoin.fr/annonces/offres/', )
 
-    def proper_description(self, desc):
-        str = u"\n".join(desc)
-        str = str.strip()
-        #str = str.replace("\n","")
-        #str = str.replace("  ","")
-        return str
+    def __init__(self, *args, **kwargs):
+        super(LbcSpider, self).__init__(*args, **kwargs)
+        
+        self.lbcAd = LbcAd(self.logger)
+        
+        self.nb_page = 0
+        self.nb_doc = 0
+        
+        if kwargs.get('url'):
+            self.start_urls = [kwargs.get('url')]
+        self.logger.info("### Start URL: {}".format(self.start_urls))
 
-    def parse_page(self, response):
-        lbc_page = LeboncoinItem()
-        self.logger.debug("page nb doc", self.nb_doc, response.url)
-        lbc_page['doc_url'] = self.proper_url(response.url)
+    def parse(self, response):
+        """
+            parse multi 
+        """
+        self.logger.debug("response.url : {}".format(response.url))
+        base_xpath = '/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]'
+        base = response.xpath(base_xpath)
+        
+        ad_urls_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href'
+        ad_urls = base.xpath(ad_urls_xpath).extract()
+        
+        next_page_url_xpath = 'footer/div/div/a[@id="next"]/@href'
+        next_page_url = base.xpath(next_page_url_xpath).extract_first()
 
-        base = response.xpath('/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]')
-        base2 = base.xpath('section/section/section[@class="properties lineNegative"]')
-        lbc_page['title'] = self.takeFirst(base.xpath('section/header/h1/text()').extract()).strip()
+        self.logger.debug("list of ad urls: {}".format(ad_urls))
+        self.logger.debug("next page url: {}".format(next_page_url))
+        
+        while next_page_url is None:
+            if self.nb_doc == 0:
+                raise CloseSpider('End - Done')  # must close spider
+            self.logger.debug("Wait to close spider nb doc left", self.nb_doc)
+            time.sleep(0.5)
+        for ad_url in ad_urls:
+                self.nb_doc += 1
+                ad_view_url = "https:" + ad_url
+                self.logger.info( "ad_view_url : {}".format(ad_view_url))
+                yield scrapy.Request(ad_view_url, callback=self.parse_ad_page)
+        
+        #req next page
+        self.nb_page += 1
+        yield scrapy.Request("http:" + next_page_url, callback=self.parse)
+       
+    def parse_ad_page(self, response):
+        """
+            parse ad view page
+        """
+        ad_base_xpath = '/html/body/section[@id="container"]/main/section[@class="content-center"]/section[@id="adview"]'
+        ad_base = response.xpath(ad_base_xpath)
+        ad_base2 = ad_base.xpath('section/section/section[@class="properties lineNegative"]')
+        
+        title = ad_base.xpath('section/header/h1/text()').extract_first()
+        utag_data = response.xpath('/html/body/script[4]/text()').extract_first()
+        
+        images = ad_base.xpath('section/section/script[2]/text()').extract_first()
+        if images is None:
+          images = response.xpath('//*[@class="item_image big popin-open trackable"]/@data-popin-content').extract_first()
 
-        criterias = self.takeFirst(response.xpath('/html/body/script[1]/text()').extract())
-        lbc_page['c'] = self.jsVar_2_pyDic(criterias)
-
-        if int(lbc_page['c']['nbphoto']) > 1:
-            images = self.takeFirst(base.xpath('section/section/script/text()').extract())
-            if images is not None:
-                lbc_page['img_urls'] = self.find_imgs_urls(images)
-                lbc_page['thumb_urls'] = self.find_thumbs_urls(images)
-        elif int(lbc_page['c']['nbphoto']) == 1:
-            lbc_page['img_urls'] = self.takeFirst(base.xpath('section/section[@class="adview_main"]/meta/@content').extract())[2:]
-
-        city = self.takeFirst(base2.xpath('div[@itemtype="http://schema.org/Place"]/h2/span[@itemtype="http://schema.org/PostalAddress"]/text()').extract())
-        proper_city = " ".join(city.strip().split(' ')[:-1])
-        lbc_page['addr_locality'] = proper_city
-
-        place_list = self.jsVars_2_py(self.takeFirst(base.xpath('aside/div/script/text()').extract()))
-        apiKey = place_list[0]
-        lat = place_list[1]
-        lng = place_list[2]
-        location = self.get_geopoint(lng, lat)
-        if location:
-            lbc_page['location'] = location
-
-        date_text = base2.xpath('p/text()').extract()
-        upload_date = self.get_date(date_text)
-        lbc_page['upload_date'] = upload_date.strftime(self.DATETIME_FORMAT)
-        lbc_page['upload_epoch'] = upload_date.strftime(self.EPOCH_FORMAT)
+        places = ad_base.xpath('aside/div/script/text()').extract_first()
+        date_str = ad_base2.xpath('p/text()').extract_first()
+        
         check_date = datetime.now()
-        lbc_page['check_date'] = check_date.strftime(self.DATETIME_FORMAT)
-        lbc_page['check_epoch'] = check_date.strftime(self.EPOCH_FORMAT)
-
-        lbc_page['user_name'] = self.takeFirst(base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract())
-
-        description = base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
-        lbc_page['desc'] = self.proper_description(description)
-
-        is_phonenumber = response.xpath('/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section/aside[@class="sidebar"]/div/div[1]/div/button[@class="button-orange large phoneNumber trackable"]').extract()
-        if is_phonenumber:
-            payload = {
-                        'app_id': 'leboncoin_web_utils',
-                        'key': str(apiKey),
-                        'list_id': str(lbc_page['c']['listid']),
-                        'text': '1'
-                        }
-
-            if self.get_phone:
-                # only 4req/s is alllowed
-                yield scrapy.FormRequest("https://api.leboncoin.fr/api/utils/phonenumber.json",
-                                            formdata=payload,
-                                            callback=self.parse_phone,
-                                            meta={'lbc': lbc_page}
-                                        )
-        else:
-            self.nb_doc -= 1  # decrement cnt usefull for stop spider
-            yield lbc_page
-
-    def parse_phone(self, response):
-        lbc_page = response.meta['lbc']
-        dic = json.loads(response.body)
-        if dic["utils"]["status"] == "OK":
-            lbc_page["phonenumber"] = dic["utils"]["phonenumber"]
-
-        self.nb_doc -= 1  # decrement cnt usefull for stop spider
-        return lbc_page
+        user_name = ad_base2.xpath('div[@class="line line_pro noborder"]/p/a/text()').extract_first()
+        description = ad_base2.xpath('div[@class="line properties_description"]/p[@itemprop="description"]/text()').extract()
+        
+        is_phonenumber = response.xpath('boolean(count(//button[@class="button-orange large phoneNumber trackable"]))').extract_first()   
+       
+        #lbc_ad = LeboncoinItem()
+        lbc_ad = {}
+        lbc_ad['ad_url'] = response.url        
+        lbc_ad['title'] = title        
+        lbc_ad['description'] = description
+        lbc_ad['criterias'] = utag_data
+        lbc_ad['images'] = images
+        lbc_ad['user_name'] = user_name
+        lbc_ad['places'] = places
+        lbc_ad['upload_date'] = date_str
+        lbc_ad['check_date'] = check_date
+        lbc_ad['is_phonenumber'] = is_phonenumber
+        
+              
+        self.logger.debug( "ad_url, nb doc : {}\t\t{}".format( response.url, self.nb_doc))
+        self.nb_doc -= 1  # decrement cnt usefull for stop spider     
+     
+        
+        self.logger.debug( "lbc_ad : {}".format(lbc_ad))
+        yield self.lbcAd.proper(lbc_ad)
+        

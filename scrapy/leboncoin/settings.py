@@ -35,7 +35,7 @@ ITEM_PIPELINES = {
 ES_HOST = "127.0.0.1"
 ES_PORT = 9200
 ES_URL_PREFIX = ''
-ES_BULK_SIZE = 400
+ES_BULK_SIZE = 300
 
 #Maximum number of concurrent items (per response) to process in parallel in the Item Processor
 CONCURRENT_ITEMS = 100

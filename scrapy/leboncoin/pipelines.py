@@ -13,9 +13,10 @@ from scrapy.exceptions import DropItem
 import json
 import codecs
 import logging
+import pprint
 from collections import OrderedDict
 from datetime import datetime
-import pprint
+
 
 class JsonLinesWithEncodingPipeline(object):
     def __init__(self):
@@ -50,14 +51,19 @@ class ElasticsearchBulkIndexPipeline(object):
         #self.tracer.addHandler(logging.StreamHandler())
         self.tracer.addHandler(logging.NullHandler())
         self.tracer.propagate = False
+        
         es_params = {'host': settings.get('ES_HOST', 'localhost'),
                     'port': settings.get('ES_PORT', 9200),
                     'url_prefix': settings.get('ES_URL_PREFIX', '') }
+                    
         self.action_buffer = list()
-        #first try to set  "limit -Sn 30000" and Hn  if bulksize is bigger
-        #second if the first step fails threadpool.bulk.queue_size: 500 in elasticsearch.yml
-        self.es_bulk_size = settings.get('ES_BULK_SIZE', 50)
+        
         self.es = Elasticsearch([es_params])
+        #first try to set  "limit -Sn 30000" 
+        #and "limit -Hn 30000"   if bulksize is bigger
+        #second if the first step fails threadpool.bulk.queue_size: 500 in elasticsearch.yml
+        self.es_bulk_size = settings.get('ES_BULK_SIZE', 10)
+        
         """
         if not self.es.ping():
             Exception('ES cluster not ready')
@@ -66,23 +72,33 @@ class ElasticsearchBulkIndexPipeline(object):
 
     def add_index_action(self, dic):
         index_date = dic["upload_date"][:10]
-        #"index_date = datetime.datetime.strptime(proper_encode["upload_date"], "%Y.%m.%d %H:%M:%S").strftime("%Y.%m.%d")
+        #index_date = dic["upload_date"].strftime("%Y.%m.%d")
         action = { '_op_type': 'index',
                     '_index': "lbc-" + index_date,
                     '_type': 'lbc',
-                    #'_id': dic.get('doc_id')
-                    '_id': dic['c']['listid'],
-                    '_source': dic.__dict__['_values']
+                    '_id': dic['listid'],
+                    '_source': dic
+                    #'_source': dic.__dict__['_values']                    
                 }
         self.action_buffer.append(action)
 
     def process_item(self, item, spider):
         if len(self.action_buffer) == self.es_bulk_size:
-            success, _ = helpers.bulk( self.es, actions=self.action_buffer, stats_only=True, raise_on_error=True, chunk_size=self.es_bulk_size)
-            #print((success))
+            success, _ = helpers.bulk( self.es,
+                                       actions=self.action_buffer,
+                                       stats_only=True,
+                                       raise_on_error=True,
+                                       chunk_size=self.es_bulk_size
+                                      )
+            print(success)
             self.action_buffer = list()
         self.add_index_action(item)
         return item
 
     def spider_closed(self, spider):
-        success, _ = helpers.bulk( self.es, actions=self.action_buffer, stats_only=True,  raise_on_error=True)
+        success, _ = helpers.bulk( self.es,
+                                    actions=self.action_buffer,
+                                    stats_only=True,
+                                    raise_on_error=True
+                                  )
+        

@@ -3,7 +3,7 @@
 
 ## Requirements
 * python 3.5
-  https://docs.python.org/3/
+  https://docs.python.org/3.5/
 
 * elasticsearch 5.5.1
   https://www.elastic.co/guide/en/elastic-stack/5.5/index.html

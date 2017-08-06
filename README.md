@@ -2,38 +2,36 @@
 
 
 ## Requirements
-* python 2.7
-  https://docs.python.org/2/
+* python 3.5
+  https://docs.python.org/3/
 
-* elasticsearch 2.3.3
-  https://www.elastic.co/guide/en/elasticsearch/reference/2.3/index.html
+* elasticsearch 5.5.1
+  https://www.elastic.co/guide/en/elastic-stack/5.5/index.html
 
-* kibana 4.5.1
-  https://www.elastic.co/guide/en/kibana/4.5/index.html
+* kibana 5.5.1
+  https://www.elastic.co/guide/en/kibana/5.5/index.html
 
 * elasticsearch-py==2.3.0
-  http://elasticsearch-py.readthedocs.io/en/2.3.0/
+  http://elasticsearch-py.readthedocs.io/en/5.4.0/
 
-* scrapy==1.1.0
-  http://doc.scrapy.org/en/1.1/intro/install.html
+* scrapy==1.4.0
+  http://doc.scrapy.org/en/1.4/intro/install.html
 
-* scrapyd==1.1.0
-  http://scrapyd.readthedocs.io/en/1.1/
+* scrapyd==1.2.0
+  http://scrapyd.readthedocs.io/en/1.2/
 
 * scrapoxy
   http://docs.scrapoxy.io/en/master/
 
 ## Install
 ```
-   curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
    apt-get update 
-   apt-get install build-essential libxml2-dev libxslt-dev python-dev python-lxml nodejs
+   apt-get install build-essential libxml2-dev libxslt-dev python3-dev python3-pip zlib1g-dev libffi-dev libssl-dev openjdk-8-jdk-headless
 
-   wget -c https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.3.3/elasticsearch-2.3.3.deb 
-   wget -c https://download.elastic.co/kibana/kibana/kibana_4.5.1_amd64.deb
-   dpkg -i elasticsearch-2.3.3.deb kibana_4.5.1_amd64.deb
-   pip install -U scrapy scrapyd scrapyd-client elasticsearch==2.3.0
-   npm install -g scrapoxy
+   wget -c https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.5.1.deb
+   wget -c https://artifacts.elastic.co/downloads/kibana/kibana-5.5.1-amd64.deb
+   dpkg -i elasticsearch-5.5.1.deb kibana-5.5.1-amd64.deb
+   pip3 install -U scrapy scrapyd scrapyd-client elasticsearch==5.4.0
 ``` 
 
 

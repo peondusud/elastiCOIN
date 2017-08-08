@@ -165,22 +165,22 @@ class LbcSpider(scrapy.Spider):
         next_page_url = base.xpath(next_page_url_xpath).extract_first()
 
         self.logger.debug("list of ad urls: {}".format(ad_urls))
-        self.logger.debug("next page url: {}".format(next_page_url))
+        self.logger.debug("next page url: {}".format(next_page_url))    
         
-        while next_page_url is None:
+        while next_page_url is None and ad_urls is None:
             if self.nb_doc == 0:
                 raise CloseSpider('End - Done')  # must close spider
-            self.logger.debug("Wait to close spider nb doc left", self.nb_doc)
+            self.logger.debug("Wait to close spider nb doc left: {}".format(self.nb_doc))
             time.sleep(0.5)
         for ad_url in ad_urls:
                 self.nb_doc += 1
                 ad_view_url = "https:" + ad_url
                 self.logger.info( "ad_view_url : {}".format(ad_view_url))
                 yield scrapy.Request(ad_view_url, callback=self.parse_ad_page)
-        
-        #req next page
-        self.nb_page += 1
-        yield scrapy.Request("http:" + next_page_url, callback=self.parse)
+        if next_page_url is not None: 
+            #req next page
+            self.nb_page += 1
+            yield scrapy.Request("http:" + next_page_url, callback=self.parse)
        
     def parse_ad_page(self, response):
         """

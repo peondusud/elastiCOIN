@@ -467,7 +467,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     logger.info(os.environ.get('ES_HOST'))
-    es = Elasticsearch([{'host': args.host, 'port': args.port}])
+    host = os.environ.get('ES_HOST', args.host)
+    port = os.environ.get('ES_PORT', args.port)
+    logger.info("host=> {} port=> {}".format(host, port))
+    es = Elasticsearch([{'host': host, 'port': port}])
     
     logger.info("Try to put lbc template")
     ret = es.indices.put_template(name='lbc', body=tmplt, create=False )

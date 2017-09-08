@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-
+import argparse
 #pip3 install elasticsearch
 from elasticsearch import Elasticsearch, helpers 
 from datetime import date, datetime
@@ -459,8 +459,12 @@ if __name__ == '__main__':
     tracer.addHandler(logging.NullHandler())
     #tracer.propagate = False
 
+    parser = argparse.ArgumentParser( description='lbc ES template ' )
+    parser.add_argument('-h', '--host', default='127.0.0.1', help='ES host' )
+    parser.add_argument('-p', '--port', default=9200, type=int, help='ES port' )
+    args = parser.parse_args()
 
-    es = Elasticsearch([{'host': '127.0.0.1'}])
+    es = Elasticsearch([{'host': args.host, 'port': args.port}])
 
     logger.info("Try to put lbc template")
     ret = es.indices.put_template(name='lbc', body=tmplt, create=False )

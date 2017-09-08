@@ -460,8 +460,8 @@ if __name__ == '__main__':
     #tracer.propagate = False
 
     parser = argparse.ArgumentParser( description='lbc ES template ' )
-    parser.add_argument('-h', '--host', default='127.0.0.1', help='ES host' )
-    parser.add_argument('-p', '--port', default=9200, type=int, help='ES port' )
+    parser.add_argument('-H', '--host', default='127.0.0.1', help='ES host' )
+    parser.add_argument('-P', '--port', default=9200, type=int, help='ES port' )
     args = parser.parse_args()
 
     es = Elasticsearch([{'host': args.host, 'port': args.port}])

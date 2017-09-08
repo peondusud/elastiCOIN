@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 import logging
 import argparse
+
 #pip3 install elasticsearch
 from elasticsearch import Elasticsearch, helpers 
 from datetime import date, datetime
@@ -463,9 +465,10 @@ if __name__ == '__main__':
     parser.add_argument('-H', '--host', default='127.0.0.1', help='ES host' )
     parser.add_argument('-P', '--port', default=9200, type=int, help='ES port' )
     args = parser.parse_args()
-
+    
+    logger.info(os.environ.get('ES_HOST'))
     es = Elasticsearch([{'host': args.host, 'port': args.port}])
-
+    
     logger.info("Try to put lbc template")
     ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
 

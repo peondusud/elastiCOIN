@@ -456,8 +456,12 @@ def es_setup(host, port):
 		logger.info(ret)
 		sys.exit(0)
 	except ConnectionRefusedError as err:
-		logger.debug(err)
-		logger.info("ConnectionRefusedError to ES cluster")
+		try:
+			logger.debug(err)
+			logger.info("ConnectionRefusedError to ES cluster")
+		except elasticsearch.exceptions.ConnectionError as err:
+			logger.debug(err)
+			logger.info("elasticsearch.exceptions.ConnectionError ES cluster")
 	except elasticsearch.exceptions.ConnectionError as err:
 		logger.debug(err)
 		logger.info("elasticsearch.exceptions.ConnectionError ES cluster")

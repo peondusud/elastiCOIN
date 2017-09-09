@@ -8,7 +8,8 @@ import logging
 import argparse
 
 #pip3 install elasticsearch
-from elasticsearch import Elasticsearch, helpers 
+from elasticsearch import Elasticsearch, helpers
+import elasticsearch
 from datetime import date, datetime
 from json import loads, dumps
 from itertools import islice
@@ -454,10 +455,12 @@ def es_setup(host, port):
 		ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
 		logger.info(ret)
 		sys.exit(0)
-	except Exception:
+	except ConnectionError:
+		pass
 		logger.info("Can't connect to ES cluster")
-	except BaseException:
-		logger.info("BaseException ES cluster")
+	except elasticsearch.exceptions.ConnectionError:
+		pass
+		logger.info("lasticsearch.exceptions.ConnectionError ES cluster")
 	finally:
 		logger.info("finally ES cluster")
 

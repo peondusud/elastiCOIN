@@ -446,6 +446,20 @@ tmplt = """
 }
 """
 
+def es_setup(host, port):
+	try:
+		es = Elasticsearch([{'host': host, 'port': port}])
+		logger.info(es.info())
+		logger.info("Try to put lbc template")
+		ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
+		logger.info(ret)
+		sys.exit(0)
+	except Exception:
+		logger.info("Can't connect to ES cluster")
+	except BaseException:
+		logger.info("BaseException ES cluster")
+	finally:
+		logger.info("finally ES cluster")
 
 
 if __name__ == '__main__':
@@ -472,15 +486,10 @@ if __name__ == '__main__':
 	while True:
 		time.sleep(2)
 		try:
-			es = Elasticsearch([{'host': host, 'port': port}])
-			logger.info(es.info())
-			logger.info("Try to put lbc template")
-			ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
-			logger.info(ret)
-			sys.exit(0)
+			es_setup(host, port):
 		except Exception:
-			logger.info("Can't connect to ES cluster")
+			pass
 		except BaseException:
-			logger.info("BaseException ES cluster")
+			pass
 		finally:
 			pass

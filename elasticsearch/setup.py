@@ -455,9 +455,9 @@ def es_setup(host, port):
 		ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
 		logger.info(ret)
 		sys.exit(0)
-	except ConnectionError as err:
+	except ConnectionRefusedError as err:
 		logger.debug(err)
-		logger.info("Can't connect to ES cluster")
+		logger.info("ConnectionRefusedError to ES cluster")
 	except elasticsearch.exceptions.ConnectionError as err:
 		logger.debug(err)
 		logger.info("elasticsearch.exceptions.ConnectionError ES cluster")

@@ -485,9 +485,9 @@ if __name__ == '__main__':
 	port = os.environ.get('ES_PORT', args.port)
 	logger.info("host=> {} port=> {}".format(host, port))
 	sys.tracebacklimit=0
-	while True:
-		time.sleep(2)
+	while True:	
 		try:
 			es_setup(host, port)
 		except Exception as err:
 			logger.debug(err)
+		time.sleep(5)

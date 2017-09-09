@@ -456,12 +456,8 @@ def es_setup(host, port):
 		logger.info(ret)
 		sys.exit(0)
 	except ConnectionRefusedError as err:
-		try:
-			logger.debug(err)
-			logger.info("ConnectionRefusedError to ES cluster")
-		except elasticsearch.exceptions.ConnectionError as err:
-			logger.debug(err)
-			logger.info("elasticsearch.exceptions.ConnectionError ES cluster")
+		logger.debug(err)
+		logger.info("ConnectionRefusedError to ES cluster")
 	except elasticsearch.exceptions.ConnectionError as err:
 		logger.debug(err)
 		logger.info("elasticsearch.exceptions.ConnectionError ES cluster")
@@ -473,10 +469,10 @@ if __name__ == '__main__':
 	logger = logging.getLogger(__name__)
 	logger.setLevel( 'INFO' )
 
-	tracer = logging.getLogger('elasticsearch.trace')
-	tracer.setLevel('DEBUG')
+	#tracer = logging.getLogger('elasticsearch.trace')
+	#tracer.setLevel('DEBUG')
 	#tracer.addHandler(logging.StreamHandler())
-	tracer.addHandler(logging.NullHandler())
+	#tracer.addHandler(logging.NullHandler())
 	#tracer.propagate = False
 
 	parser = argparse.ArgumentParser( description='lbc ES template ' )

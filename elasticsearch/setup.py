@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
+import time
 import logging
 import argparse
 
@@ -470,9 +472,15 @@ if __name__ == '__main__':
     host = os.environ.get('ES_HOST', args.host)
     port = os.environ.get('ES_PORT', args.port)
     logger.info("host=> {} port=> {}".format(host, port))
-    es = Elasticsearch([{'host': host, 'port': port}])
-    
-    logger.info("Try to put lbc template")
-    ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
-
-    logger.info(ret)
+    while True:
+        time.sleep(2)
+        try:
+	    es = Elasticsearch([{'host': host, 'port': port}])
+            logger.info(es.info())
+            logger.info("Try to put lbc template")
+            ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
+            logger.info(ret)
+	    sys.exit(0)
+        except OSError:
+            logger.info("Can't connect to ES cluster")
+	

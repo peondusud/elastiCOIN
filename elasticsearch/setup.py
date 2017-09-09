@@ -448,39 +448,35 @@ tmplt = """
 
 
 
-
-
-
 if __name__ == '__main__':
-    fmt = '%(asctime)-15s [%(levelname)s] [%(module)s] %(message)s'
-    logging.basicConfig(format=fmt)
-    logger = logging.getLogger(__name__)
-    logger.setLevel( 'INFO' )
+	fmt = '%(asctime)-15s [%(levelname)s] [%(module)s] %(message)s'
+	logging.basicConfig(format=fmt)
+	logger = logging.getLogger(__name__)
+	logger.setLevel( 'INFO' )
 
-    tracer = logging.getLogger('elasticsearch.trace')
-    tracer.setLevel('DEBUG')
-    #tracer.addHandler(logging.StreamHandler())
-    tracer.addHandler(logging.NullHandler())
-    #tracer.propagate = False
+	tracer = logging.getLogger('elasticsearch.trace')
+	tracer.setLevel('DEBUG')
+	#tracer.addHandler(logging.StreamHandler())
+	tracer.addHandler(logging.NullHandler())
+	#tracer.propagate = False
 
-    parser = argparse.ArgumentParser( description='lbc ES template ' )
-    parser.add_argument('-H', '--host', default='127.0.0.1', help='ES host' )
-    parser.add_argument('-P', '--port', default=9200, type=int, help='ES port' )
-    args = parser.parse_args()
-    
-    logger.info(os.environ.get('ES_HOST'))
-    host = os.environ.get('ES_HOST', args.host)
-    port = os.environ.get('ES_PORT', args.port)
-    logger.info("host=> {} port=> {}".format(host, port))
-    while True:
-        time.sleep(2)
-        try:
-            es = Elasticsearch([{'host': host, 'port': port}])
-            logger.info(es.info())
-            logger.info("Try to put lbc template")
-            ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
-            logger.info(ret)
-            sys.exit(0)
-        except OSError:
-            logger.info("Can't connect to ES cluster")
-	
+	parser = argparse.ArgumentParser( description='lbc ES template ' )
+	parser.add_argument('-H', '--host', default='127.0.0.1', help='ES host' )
+	parser.add_argument('-P', '--port', default=9200, type=int, help='ES port' )
+	args = parser.parse_args()
+
+	logger.info(os.environ.get('ES_HOST'))
+	host = os.environ.get('ES_HOST', args.host)
+	port = os.environ.get('ES_PORT', args.port)
+	logger.info("host=> {} port=> {}".format(host, port))
+	while True:
+		time.sleep(2)
+		try:
+			es = Elasticsearch([{'host': host, 'port': port}])
+			logger.info(es.info())
+			logger.info("Try to put lbc template")
+			ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
+			logger.info(ret)
+			sys.exit(0)
+		except OSError:
+			logger.info("Can't connect to ES cluster")

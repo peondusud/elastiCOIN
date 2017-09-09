@@ -486,7 +486,7 @@ if __name__ == '__main__':
 	while True:
 		time.sleep(2)
 		try:
-			es_setup(host, port):
+			es_setup(host, port)
 		except Exception:
 			pass
 		except BaseException:

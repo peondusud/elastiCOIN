@@ -488,6 +488,7 @@ if __name__ == '__main__':
 	host = os.environ.get('ES_HOST', args.host)
 	port = os.environ.get('ES_PORT', args.port)
 	logger.info("host=> {} port=> {}".format(host, port))
+	sys.tracebacklimit=0
 	while True:
 		time.sleep(2)
 		try:

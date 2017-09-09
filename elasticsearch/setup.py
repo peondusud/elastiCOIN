@@ -478,5 +478,5 @@ if __name__ == '__main__':
 			ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
 			logger.info(ret)
 			sys.exit(0)
-		except OSError:
+		except Exception:
 			logger.info("Can't connect to ES cluster")

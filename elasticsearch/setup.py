@@ -480,3 +480,7 @@ if __name__ == '__main__':
 			sys.exit(0)
 		except Exception:
 			logger.info("Can't connect to ES cluster")
+		except BaseException:
+			logger.info("BaseException ES cluster")
+		finally:
+			pass

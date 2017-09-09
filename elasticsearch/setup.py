@@ -455,14 +455,12 @@ def es_setup(host, port):
 		ret = es.indices.put_template(name='lbc', body=tmplt, create=False )
 		logger.info(ret)
 		sys.exit(0)
-	except ConnectionError:
-		pass
+	except ConnectionError as err:
+		logger.debug(err)
 		logger.info("Can't connect to ES cluster")
-	except elasticsearch.exceptions.ConnectionError:
-		pass
-		logger.info("lasticsearch.exceptions.ConnectionError ES cluster")
-	finally:
-		logger.info("finally ES cluster")
+	except elasticsearch.exceptions.ConnectionError as err:
+		logger.debug(err)
+		logger.info("elasticsearch.exceptions.ConnectionError ES cluster")
 
 
 if __name__ == '__main__':
@@ -490,9 +488,5 @@ if __name__ == '__main__':
 		time.sleep(2)
 		try:
 			es_setup(host, port)
-		except Exception:
-			pass
-		except BaseException:
-			pass
-		finally:
-			pass
+		except Exception as err:
+			logger.debug(err)

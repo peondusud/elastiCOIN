@@ -1,0 +1,70 @@
+ #  docker-compose up
+
+version: '3.3'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.0
+    container_name: elasticsearch
+    environment:
+        - cluster.name=elastiCOIN
+        - node.name=node1
+        - http.host=0.0.0.0
+        - transport.host=127.0.0.1
+        - bootstrap.memory_lock=true
+        - xpack.security.enabled=false
+        - "ES_JAVA_OPTS=-Xms1g -Xmx1g -Des.enforce.bootstrap.checks=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      as:
+        soft: -1
+        hard: -1
+    entrypoint: ["/bin/bash","-c", "bin/elasticsearch-plugin remove --purge x-pack ; bin/elasticsearch"]
+    volumes:
+      - ./elasticDB:/usr/share/elasticsearch/data
+    ports: ['9200:9200']
+    networks: ['elknet']
+    deploy:
+      resources:
+        limits:
+          #cpus: '0.001'
+          memory: 2G
+
+  scrapyd:
+    image: alpine-py3-scrapyd:latest
+    container_name: scrapyd
+    ports: ['6800:6800']
+    volumes:
+      - ./scrapyd:/var/lib/scrapyd/
+    networks: ['elknet']
+    links: ['elasticsearch']
+    depends_on: ['elasticsearch']
+    logging: {driver: "json-file"}
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.6.0
+    container_name: kibana
+    networks: ['elknet']
+    ports: ['5601:5601']
+#    environment: "ELASTICSEARCH_URL=http://elasticsearch:9200"
+    entrypoint: ["/bin/bash", "-c", "bin/kibana-plugin remove x-pack ; /usr/local/bin/kibana-docker"]
+    links: ['elasticsearch']
+    depends_on: ['elasticsearch']
+    logging: {driver: "json-file"}
+
+  es_setup:
+    image: alpine-py3-scrapyd:latest
+    container_name: es_setup
+    environment:
+        - ES_HOST=elasticsearch
+        - SCRAPYD_HOST=scrapyd
+        #- ES_HOST={{elasticsearch|container_private_ip}}
+    networks: ['elknet']
+    links: ['elasticsearch']
+    depends_on: ['elasticsearch']
+    entrypoint: ["/bin/sh", "-c", "/usr/bin/wget https://github.com/peondusud/elastiCOIN/archive/master.zip ; unzip master.zip; cd elastiCOIN-master/elasticsearch ; python3 setup.py; cd ../scrapy ; sed -i s/localhost/scrapyd/ scrapy.cfg; scrapyd-deploy leboncoin -p leboncoin"]
+    #entrypoint: ["/bin/sh", "-c", "/usr/bin/wget https://raw.githubusercontent.com/peondusud/elastiCOIN/master/elasticsearch/setup.py ; python3 setup.py"]
+    logging: {driver: "json-file"}
+
+networks: {elknet: {}}

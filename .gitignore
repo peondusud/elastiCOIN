@@ -60,3 +60,7 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+#docker mounted volume
+docker/elasticDB/
+docker/scrapyd/

@@ -173,7 +173,7 @@ class LbcSpider(scrapy.Spider):
         for ad_url in ad_urls:
                 self.nb_doc += 1
                 ad_view_url = "https:" + ad_url
-                self.logger.info( "ad_view_url : {}".format(ad_view_url))
+                self.logger.debug( "ad_view_url : {}".format(ad_view_url))
                 yield scrapy.Request(ad_view_url, callback=self.parse_ad_page)
         if next_page_url is not None:
             #req next page

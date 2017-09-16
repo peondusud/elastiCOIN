@@ -23,7 +23,7 @@ class JsonLinesWithEncodingPipeline(object):
         self.logger = logging.getLogger(__name__)
         #settings = get_project_settings()
         #pprint.pprint((settings.__dict__))
-        d =  datetime.now().strftime("%y.%m.%d.%H%M")        
+        d =  datetime.now().strftime("%y.%m.%d.%H%M")
         prefix  = settings.get('FEED_JL_URI_PREFIX', "dump" )
         encodin =  settings.get('FEED_JL_ENCODING', 'utf-8')
         suffix = encodin + ".json"
@@ -51,19 +51,22 @@ class ElasticsearchBulkIndexPipeline(object):
         #self.tracer.addHandler(logging.StreamHandler())
         self.tracer.addHandler(logging.NullHandler())
         self.tracer.propagate = False
-        
+
         es_params = {'host': settings.get('ES_HOST', 'localhost'),
                     'port': settings.get('ES_PORT', 9200),
                     'url_prefix': settings.get('ES_URL_PREFIX', '') }
-                    
+
         self.action_buffer = list()
-        
+
+        self.tracer("ES_HOST",settings.get('ES_HOST', 'localhost'))
         self.es = Elasticsearch([es_params])
-        #first try to set  "limit -Sn 30000" 
+
+        #first try to set  "limit -Sn 30000"
         #and "limit -Hn 30000"   if bulksize is bigger
         #second if the first step fails threadpool.bulk.queue_size: 500 in elasticsearch.yml
         self.es_bulk_size = settings.get('ES_BULK_SIZE', 10)
-        
+
+        self.tracer("ping ES {}".format(self.es.ping()))
         """
         if not self.es.ping():
             Exception('ES cluster not ready')
@@ -78,7 +81,7 @@ class ElasticsearchBulkIndexPipeline(object):
                     '_type': 'lbc',
                     '_id': dic['listid'],
                     '_source': dic
-                    #'_source': dic.__dict__['_values']                    
+                    #'_source': dic.__dict__['_values']
                 }
         self.action_buffer.append(action)
 
@@ -101,4 +104,3 @@ class ElasticsearchBulkIndexPipeline(object):
                                     stats_only=True,
                                     raise_on_error=True
                                   )
-        

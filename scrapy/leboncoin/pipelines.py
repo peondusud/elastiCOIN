@@ -45,7 +45,7 @@ class JsonLinesWithEncodingPipeline(object):
 class ElasticsearchBulkIndexPipeline(object):
     def __init__(self):
         #settings = get_project_settings()
-        #self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.tracer = logging.getLogger('elasticsearch.trace')
         self.tracer.setLevel(settings.get('LOG_LEVEL', 'INFO'))
         #self.tracer.addHandler(logging.StreamHandler())
@@ -56,17 +56,18 @@ class ElasticsearchBulkIndexPipeline(object):
                     'port': settings.get('ES_PORT', 9200),
                     'url_prefix': settings.get('ES_URL_PREFIX', '') }
 
-        self.action_buffer = list()
 
-        self.tracer("ES_HOST",settings.get('ES_HOST', 'localhost'))
+
+        self.logger("ES_HOST",settings.get('ES_HOST', 'localhost'))
         self.es = Elasticsearch([es_params])
 
         #first try to set  "limit -Sn 30000"
         #and "limit -Hn 30000"   if bulksize is bigger
         #second if the first step fails threadpool.bulk.queue_size: 500 in elasticsearch.yml
         self.es_bulk_size = settings.get('ES_BULK_SIZE', 10)
+        self.action_buffer = list()
 
-        self.tracer("ping ES {}".format(self.es.ping()))
+        self.logger("ping ES {}".format(self.es.ping()))
         """
         if not self.es.ping():
             Exception('ES cluster not ready')

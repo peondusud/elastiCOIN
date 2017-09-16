@@ -58,7 +58,7 @@ class ElasticsearchBulkIndexPipeline(object):
 
 
 
-        self.logger.info("ES_HOST",settings.get('ES_HOST', 'localhost'))
+        self.logger.info("ES_HOST {}".format(es_params['host']))
         self.es = Elasticsearch([es_params])
 
         #first try to set  "limit -Sn 30000"

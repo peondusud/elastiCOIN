@@ -58,7 +58,7 @@ class ElasticsearchBulkIndexPipeline(object):
 
 
 
-        self.logger("ES_HOST",settings.get('ES_HOST', 'localhost'))
+        self.logger.info("ES_HOST",settings.get('ES_HOST', 'localhost'))
         self.es = Elasticsearch([es_params])
 
         #first try to set  "limit -Sn 30000"
@@ -67,7 +67,7 @@ class ElasticsearchBulkIndexPipeline(object):
         self.es_bulk_size = settings.get('ES_BULK_SIZE', 10)
         self.action_buffer = list()
 
-        self.logger("ping ES {}".format(self.es.ping()))
+        self.logger.info("ping ES {}".format(self.es.ping()))
         """
         if not self.es.ping():
             Exception('ES cluster not ready')

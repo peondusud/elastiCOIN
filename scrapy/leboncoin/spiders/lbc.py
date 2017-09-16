@@ -99,18 +99,15 @@ class LbcAd():
         return s
 
     def get_date(self, raw_date):
-        now = datetime.now()
-        #print(":".join("{:02x}".format(ord(c)) for c in raw_date))
-        s = raw_date.replace('\u00e0', '')
-        #s = raw_date.replace('\xe0', '')
-        #d = datetime.strptime(s, "Mise en ligne le %d %B  %H:%M")
-        d = dateparser.parse(s, date_formats=['Mise en ligne le %d %B  %H:%M'], languages=['fr'])
-        d = d.replace(year=now.year)
+        s = raw_date.replace(u'Mise en ligne le ', '')
+        #s = raw_date.replace('\u00e0', '')
+        #d = datetime.strptime(s, "Mise en ligne le %d %B  %H:%M") # needs french locale
+        d = dateparser.parse(s, date_formats=[u'%d %B à %H:%M'], languages=['fr'])
         # Prevent to have ads in future date
         # Example if parsed in january with ad date in december
-        if d > now:
+        if d > datetime.now():
               # set to previous year
-             d = d.replace(year=now.year-1)
+             d = d.replace(year=d.year-1)
         return d
 
     def proper_img_large_urls(self, string):

@@ -25,6 +25,7 @@ services:
       - ./elasticDB:/usr/share/elasticsearch/data
     ports: ['9200:9200']
     networks: ['elknet']
+    logging: {driver: "json-file"}
     deploy:
       resources:
         limits:

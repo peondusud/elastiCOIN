@@ -81,7 +81,7 @@ check scrapyd status curl http://127.0.0.1:6800/daemonstatus.json
 ## Docker Launch spider
 Wait until kibana startup processing end up
 ```
-curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d url=XXX
+curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d setting=ES_HOST=elasticsearch -d url=XXX
 ```
 Where XXX is the starting url to crawl
 

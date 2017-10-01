@@ -1,7 +1,7 @@
 # elastiCOIN
 
   
-## 1. Debian
+## 1. Debian way
 ```bash
 apt-get install git
 git clone https://github.com/peondusud/elastiCOIN.git
@@ -30,19 +30,19 @@ curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=l
 ```
 
 
-## 2. Docker Install
+## 2. Docker way
 
-### Docker requirements
-* [Dcker CE](https://docs.docker.com/engine/installation/) 
-* [Docker Compose](https://docs.docker.com/compose/install/) 
+  - ### Docker requirements
+  * [Dcker CE](https://docs.docker.com/engine/installation/) 
+  * [Docker Compose](https://docs.docker.com/compose/install/) 
 
-### Docker build 
+  - ### Docker build 
 ```bash
 cd docker\alpine-py3-scrapyd; docker build  -t alpine-py3-scrapyd .; cd ..;
 docker-compose up
 ```
 
-### Docker Launch spider
+  - ### Docker Launch spider
 ```bash
 curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d setting=ES_HOST=elasticsearch -d url=URL_TO_CRAWL
 ```

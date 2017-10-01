@@ -9,7 +9,7 @@ cd elastiCOIN/
 bash install.sh
 ```
 
-###   - Scrapy run
+  - ### Scrapy run
 ```bash
 cd scrapy; scrapy crawl lbc
 ```
@@ -18,13 +18,13 @@ Or
 cd scrapy; scrapy crawl lbc -a url=URL_TO_CRAWL
 ```
 
-###   - Scrapyd run
+  - ### Scrapyd run
 ```bash
 nohup scrapyd
 cd scrapy; scrapyd-deploy leboncoin -p leboncoin
 ```
 
-####    - Launch lbc spider
+    - #### Launch lbc spider
 ```bash
 curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d url=URL_TO_CRAWL
 ```

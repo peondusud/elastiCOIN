@@ -11,10 +11,6 @@ bash install.sh
 
   - ### Scrapy run
 ```bash
-cd scrapy; scrapy crawl lbc
-```
-  Or
-```bash
 cd scrapy; scrapy crawl lbc -a url=URL_TO_CRAWL
 ```
 

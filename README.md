@@ -40,5 +40,9 @@ docker-compose up
 ```bash
 curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d setting=ES_HOST=elasticsearch -d url=URL_TO_CRAWL
 ```
+```powershell
+$params = @{project='leboncoin';spider='lbc';setting='ES_HOST=elasticsearch';url='URL_TO_CRAWL'}
+Invoke-WebRequest -Uri "http://127.0.0.1:6800/schedule.json" -Method POST -Body $params
+```
 
 > Finally [Visit Kibana!](http://127.0.0.1:5601/) 

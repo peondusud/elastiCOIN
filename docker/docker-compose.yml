@@ -3,7 +3,7 @@
 version: '3.3'
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.2
     container_name: elasticsearch
     environment:
         - cluster.name=elastiCOIN
@@ -44,7 +44,7 @@ services:
     logging: {driver: "json-file"}
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:5.6.0
+    image: docker.elastic.co/kibana/kibana:5.6.2
     container_name: kibana
     networks: ['elknet']
     ports: ['5601:5601']

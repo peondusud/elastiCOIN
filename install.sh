@@ -5,7 +5,7 @@
 
    apt-get update
    apt-get install -y git curl ntpdate
-   apt-get install build-essential libxml2-dev libxslt-dev python3-dev python3-pip zlib1g-dev libffi-dev libssl-dev openjdk-8-jdk-headless git
+   apt-get install build-essential libxml2-dev libxslt-dev python3-dev python3-pip python3-pil zlib1g-dev libffi-dev libssl-dev openjdk-8-jdk-headless git
    pip3 install -U setuptools scrapy scrapyd scrapyd-client dateparser elasticsearch==5.4.0
    #pip3 install -U scrapy-mongodb Pillow redis pymongo elastalert 
    #npm install -g scrapoxy

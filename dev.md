@@ -3,9 +3,9 @@
 ## 1. Requirements
 * [python 3.5](https://docs.python.org/3.5/)
 
-* [elasticsearch 5.6.0](https://www.elastic.co/guide/en/elastic-stack/5.6/index.html)  
+* [elasticsearch 5.6.2](https://www.elastic.co/guide/en/elastic-stack/5.6/index.html)  
 
-* [kibana 5.6.0](https://www.elastic.co/guide/en/kibana/5.6/index.html) 
+* [kibana 5.6.2](https://www.elastic.co/guide/en/kibana/5.6/index.html) 
 
 * [elasticsearch-py==5.4.0](http://elasticsearch-py.readthedocs.io/en/5.4.0/) 
   

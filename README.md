@@ -13,7 +13,7 @@ bash install.sh
 ```bash
 cd scrapy; scrapy crawl lbc
 ```
-Or
+  Or
 ```bash
 cd scrapy; scrapy crawl lbc -a url=URL_TO_CRAWL
 ```
@@ -22,12 +22,10 @@ cd scrapy; scrapy crawl lbc -a url=URL_TO_CRAWL
 ```bash
 nohup scrapyd
 cd scrapy; scrapyd-deploy leboncoin -p leboncoin
-```
-
-> #### Launch lbc spider
-```bash
 curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d url=URL_TO_CRAWL
 ```
+> #### Launch lbc spider
+
 
 
 ## 2. Docker way

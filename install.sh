@@ -1,12 +1,13 @@
    #!/usr/bin/env bash
    
    BASEDIR=$(dirname "$0")
-   ES_VERSION=5.5.1
+   ES_VERSION=5.6.2
 
    apt-get update
    apt-get install -y git curl ntpdate
    apt-get install build-essential libxml2-dev libxslt-dev python3-dev python3-pip zlib1g-dev libffi-dev libssl-dev openjdk-8-jdk-headless git
-   pip3 install -U setuptools scrapy scrapyd scrapyd-client elasticsearch==5.4.0
+   pip3 install -U setuptools scrapy scrapyd scrapyd-client dateparser elasticsearch==5.4.0
+   #pip3 install -U scrapy-mongodb Pillow redis pymongo elastalert 
    #npm install -g scrapoxy
 
    #set timezone and local

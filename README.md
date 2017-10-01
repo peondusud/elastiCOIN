@@ -9,7 +9,7 @@ cd elastiCOIN/
 bash install.sh
 ```
 
-### Scrapy run
+###   - Scrapy run
 ```bash
 cd scrapy; scrapy crawl lbc
 ```
@@ -18,20 +18,21 @@ Or
 cd scrapy; scrapy crawl lbc -a url=URL_TO_CRAWL
 ```
 
-### Scrapyd run
+###   - Scrapyd run
 ```bash
 nohup scrapyd
-cd scrapy;
-scrapyd-deploy leboncoin -p leboncoin
+cd scrapy; scrapyd-deploy leboncoin -p leboncoin
 ```
 
-Launch lbc spider
+####    - Launch lbc spider
 ```bash
-curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d url=XXX
+curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d url=URL_TO_CRAWL
 ```
+
 
 
 ## 2. Docker Install
+
 ### Docker requirements
 * [Dcker CE](https://docs.docker.com/engine/installation/) 
 * [Docker Compose](https://docs.docker.com/compose/install/) 
@@ -47,4 +48,4 @@ docker-compose up
 curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d setting=ES_HOST=elasticsearch -d url=URL_TO_CRAWL
 ```
 
-[Visit kibana!](http://127.0.0.1:5601/) 
+> Finally [Visit Kibana!](http://127.0.0.1:5601/) 

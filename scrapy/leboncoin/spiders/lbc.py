@@ -25,7 +25,8 @@ class LbcAd():
 
     def __init__(self, logger):
         self.logger = logger
-
+        self.__now = datetime.now()
+        
         uploader_id_pattern = r"^http.{0,50}(?P<id>\d{9,12})$"
         #uploader_id_pattern = r"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$"
         self.uploader_id_regex = re.compile(uploader_id_pattern)
@@ -217,10 +218,8 @@ class LbcSpider(scrapy.Spider):
         lbc_ad['check_date'] = check_date
         lbc_ad['is_phonenumber'] = is_phonenumber
 
-
         self.logger.debug( "ad_url, nb doc : {}\t\t{}".format( response.url, self.nb_doc))
         self.nb_doc -= 1  # decrement cnt usefull for stop spider
-
 
         self.logger.debug( "lbc_ad : {}".format(lbc_ad))
         yield self.lbcAd.proper(lbc_ad)

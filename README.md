@@ -1,7 +1,7 @@
 # elastiCOIN
 
   
-## 1. Debian way
+1. ##  Debian way
 ```bash
 apt-get install git
 git clone https://github.com/peondusud/elastiCOIN.git
@@ -30,10 +30,10 @@ curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=l
 ```
 
 
-## 2. Docker way
+2. ##  Docker way
 
   - ### Docker requirements
-    * [Dcker CE](https://docs.docker.com/engine/installation/) 
+    * [Docker CE](https://docs.docker.com/engine/installation/) 
     * [Docker Compose](https://docs.docker.com/compose/install/) 
 
   - ### Docker build 

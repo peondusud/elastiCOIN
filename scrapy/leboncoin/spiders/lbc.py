@@ -25,7 +25,6 @@ class LbcAd():
 
     def __init__(self, logger):
         self.logger = logger
-        self.__now = datetime.now()
         
         uploader_id_pattern = r"^http.{0,50}(?P<id>\d{9,12})$"
         #uploader_id_pattern = r"^\/\/\w+\.leboncoin\.fr\/.{0,100}id=(?P<id>\d+).*?$"
@@ -139,7 +138,9 @@ class LbcSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(LbcSpider, self).__init__(*args, **kwargs)
-
+        print(kwargs.__dict__)
+        print(dir(kwargs))
+        self.__now = datetime.now()
         self.lbcAd = LbcAd(self.logger)
 
         self.nb_page = 0

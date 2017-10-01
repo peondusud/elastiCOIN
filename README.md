@@ -24,11 +24,10 @@ nohup scrapyd
 cd scrapy; scrapyd-deploy leboncoin -p leboncoin
 ```
 
-   - #### Launch lbc spider
+> #### Launch lbc spider
 ```bash
 curl -XPOST http://127.0.0.1:6800/schedule.json -d project=leboncoin -d spider=lbc -d url=URL_TO_CRAWL
 ```
-
 
 
 ## 2. Docker Install

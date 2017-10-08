@@ -10,8 +10,9 @@ from leboncoin.items import LeboncoinItem, LbcAd
 from urllib.parse import urlparse, parse_qs
 
 
+
 class LbcSpider(scrapy.Spider):
-    name = "lbc"
+    name = "lbc_delta"
     allowed_domains = ["leboncoin.fr"]
     start_urls = ('https://www.leboncoin.fr/annonces/offres/', )
 
@@ -25,6 +26,16 @@ class LbcSpider(scrapy.Spider):
 
         if kwargs.get('url'):
             self.start_urls = [kwargs.get('url')]
+        if kwargs.get('timedelta'):
+            timedelta = kwargs.get('timedelta')
+            if timedelta[-1:] == 'm':
+                self.timedelta = datetime.timedelta(minutes=timedelta[:-1])
+            elif timedelta[-1:] == 'h':
+                self.timedelta = datetime.timedelta(hours=timedelta[:-1])
+            elif timedelta[-1:] == 'd':
+                self.timedelta = datetime.timedelta(days=timedelta[:-1])
+        if kwargs.get('pricemin'):
+            self.pricemin = [kwargs.get('pricemin')]
         self.logger.info("### Start URL: {}".format(self.start_urls))
 
     def parse(self, response):
@@ -36,6 +47,8 @@ class LbcSpider(scrapy.Spider):
         base = response.xpath(base_xpath)
 
         ad_urls_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href'
+        ad_date_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/section/aside/p/text()'
+        ad_price_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/section/h3/@content'
         ad_urls = base.xpath(ad_urls_xpath).extract()
 
         next_page_url_xpath = 'footer/div/div/a[@id="next"]/@href'
@@ -51,6 +64,11 @@ class LbcSpider(scrapy.Spider):
                 "Wait to close spider nb doc left: {}".format(self.nb_doc))
             time.sleep(0.5)
         for ad_url in ad_urls:
+            """
+
+            d = dateparser.parse(s,date_formats=[u'%d %B, %H:%M'], languages=['fr'], settings={'PREFER_DATES_FROM': 'past'})
+            if d => self.__now - self.timedelta:
+            """
             self.nb_doc += 1
             ad_view_url = "https:" + ad_url
             self.logger.debug("ad_view_url : {}".format(ad_view_url))

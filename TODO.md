@@ -1,17 +1,11 @@
-ES bulk update 
-    nested diff
-    upsert
-    scripted search
-    create a new pipeline
+TODO List:
 
-calculate ad uptime (unvailable_date - upload_date )
-
-create another spider 
-    + read id form ES when unvailable date is not set
-    + just curl the last 2 days
-
-Kibana4 dashboards
-Timelion dasboard
-
-scrapyd
-
+- [x] scrapyd
+- [x] Docker
+- [x] Spider for custom timedelta (5m, 5h, 5d)
+- [ ] Kibana setings(index, dashboard)
+- [ ] scrapyd custom GUI(schedule.js, custom OPTIONS)
+- [ ] prepare mapping, template for Elasticsearch v6 (no more ```_all```)
+- [ ] Create a new scrapy pipeline (ES bulk update,nested diff, upsert, scripted search)
+- [ ] Timelion dashboard
+- [ ] Save items in MongoDB

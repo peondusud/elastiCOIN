@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
+
 
 import re
 import scrapy
 import dateparser
-from datetime import datetime
+from datetime import datetime, timedelta
 from scrapy.loader.processors import TakeFirst
 from scrapy.exceptions import CloseSpider
 from leboncoin.items import LeboncoinItem, LbcAd
 from urllib.parse import urlparse, parse_qs
-
 
 
 class LbcSpider(scrapy.Spider):
@@ -26,16 +26,17 @@ class LbcSpider(scrapy.Spider):
 
         if kwargs.get('url'):
             self.start_urls = [kwargs.get('url')]
-        if kwargs.get('timedelta'):
-            timedelta = kwargs.get('timedelta')
-            if timedelta[-1:] == 'm':
-                self.timedelta = datetime.timedelta(minutes=timedelta[:-1])
-            elif timedelta[-1:] == 'h':
-                self.timedelta = datetime.timedelta(hours=timedelta[:-1])
-            elif timedelta[-1:] == 'd':
-                self.timedelta = datetime.timedelta(days=timedelta[:-1])
-        if kwargs.get('pricemin'):
-            self.pricemin = [kwargs.get('pricemin')]
+
+        time_delta = kwargs.get('timedelta', "91d")
+        if time_delta[-1:] == 'm':
+            self.timedelta = timedelta(minutes=int(time_delta[:-1]))
+        elif time_delta[-1:] == 'h':
+            self.timedelta = timedelta(hours=int(time_delta[:-1]))
+        elif time_delta[-1:] == 'd':
+            self.timedelta = timedelta(days=int(time_delta[:-1]))
+
+        self.pricemin = int(kwargs.get('pricemin', '0'))
+
         self.logger.info("### Start URL: {}".format(self.start_urls))
 
     def parse(self, response):
@@ -46,15 +47,14 @@ class LbcSpider(scrapy.Spider):
         base_xpath = '/html/body/section[@id="container"]/main[@id="main"]/section[@class="content-center"]/section[@id="listingAds"]/section[@class="list mainList tabs"]'
         base = response.xpath(base_xpath)
 
-        ad_urls_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href'
-        ad_date_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/section/aside/p/text()'
-        ad_price_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/section/h3/@content'
-        ad_urls = base.xpath(ad_urls_xpath).extract()
+        #ad_urls_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a/@href'
+        ads_xpath = 'section[@class="tabsContent block-white dontSwitch"]/ul//li/a'
+        ads = base.xpath(ads_xpath)
 
         next_page_url_xpath = 'footer/div/div/a[@id="next"]/@href'
         next_page_url = base.xpath(next_page_url_xpath).extract_first()
 
-        self.logger.debug("list of ad urls: {}".format(ad_urls))
+        self.logger.debug("list of ads: {}".format(ads))
         self.logger.debug("next page url: {}".format(next_page_url))
 
         while next_page_url is None and ad_urls is None:
@@ -63,16 +63,28 @@ class LbcSpider(scrapy.Spider):
             self.logger.debug(
                 "Wait to close spider nb doc left: {}".format(self.nb_doc))
             time.sleep(0.5)
-        for ad_url in ad_urls:
-            """
 
-            d = dateparser.parse(s,date_formats=[u'%d %B, %H:%M'], languages=['fr'], settings={'PREFER_DATES_FROM': 'past'})
-            if d => self.__now - self.timedelta:
-            """
-            self.nb_doc += 1
-            ad_view_url = "https:" + ad_url
-            self.logger.debug("ad_view_url : {}".format(ad_view_url))
-            yield scrapy.Request(ad_view_url, callback=self.parse_ad_page)
+        for ad in ads:
+            ad_date = ad.xpath(
+                'section/aside/p[@class="item_supp"]/text()').extract()
+            self.logger.debug("ad_date: {}".format(ad_date))
+            ad_date = "".join(ad_date).strip()
+            self.logger.debug("ad_date: {}".format(ad_date))
+            ad_price = ad.xpath('section/h3/@content').extract_first()
+            if ad_price is None:
+                ad_price = 0
+            self.logger.debug("ad_price: {}".format(ad_price))
+            ad_date_p = dateparser.parse(ad_date,
+                                         date_formats=[
+                                             u'%d %B, %H:%M', u'%d %B à %H:%M'],
+                                         languages=['fr'],
+                                         settings={'PREFER_DATES_FROM': 'past'})
+            if ad_date_p >= self.__now - self.timedelta and int(ad_price) >= self.pricemin:
+
+                self.nb_doc += 1
+                ad_view_url = "https:" + ad.xpath('@href').extract_first()
+                self.logger.debug("ad_view_url : {}".format(ad_view_url))
+                yield scrapy.Request(ad_view_url, callback=self.parse_ad_page)
         if next_page_url is not None:
             # req next page
             self.nb_page += 1
